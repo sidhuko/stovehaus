@@ -1,0 +1,346 @@
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+   STOVEHAUS — brand token layer
+   Values are transcribed from brand-kit/03-Colour/stovehaus-palette.csv and
+   brand-kit/04-Guidelines/Stovehaus-Brand-Guidelines.pdf. Do not invent new
+   values here; see BRAND.md for what is kit v1.0 and what is a proposal.
+   --------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: 'Afacad';
+  src: url('/fonts/Afacad-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Afacad';
+  src: url('/fonts/Afacad-500.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Afacad';
+  src: url('/fonts/Afacad-600.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Afacad';
+  src: url('/fonts/Afacad-700.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Spectral';
+  src: url('/fonts/Spectral-300.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Spectral';
+  src: url('/fonts/Spectral-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Spectral';
+  src: url('/fonts/Spectral-400-italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Spectral';
+  src: url('/fonts/Spectral-600.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/fonts/IBMPlexMono-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/fonts/IBMPlexMono-500.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@theme {
+  /* Kit v1.0 palette — stovehaus-palette.csv, verbatim */
+  --color-crown-gold: #b2841b;
+  --color-gold-deep: #7d5c0f;
+  --color-gold-wash: #f4e8c8;
+  --color-firebox: #1a1713;
+  --color-ember: #b23d16;
+  --color-ember-wash: #f7e3d8;
+  --color-spring: #2e5f66;
+  --color-spring-wash: #dce9ea;
+  --color-steel: #6d675c;
+  --color-ink: #15120e;
+  --color-ink-muted: #57503f;
+  --color-ink-faint: #79705c;
+  --color-surface-100: #faf8f3;
+  --color-surface-200: #f2eee4;
+  --color-surface-300: #e7e1d3;
+  --color-hairline: #d6cfbf;
+  --color-edge: #8b8472;
+
+  /* PROPOSED kit extension — the fire pit line. See BRAND.md.
+     Derived to sit in the same contrast band as ember and spring:
+     6.73:1 on surface-100, white-on-it 7.14:1, ink-on-wash 15.29:1.
+     Screen only — CMYK not derived, needs a printed proof. */
+  --color-dusk: #7c466a;
+  --color-dusk-wash: #efe6ec;
+
+  /* Three faces, three jobs. The split is absolute — guidelines p.7. */
+  --font-display: 'Afacad', ui-sans-serif, system-ui, sans-serif;
+  --font-text: 'Spectral', ui-serif, Georgia, serif;
+  --font-spec: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+}
+
+/* ---------------------------------------------------------------------------
+   Cascade layers.
+
+   These classes MUST live in @layer components. Tailwind puts its utilities in
+   the `utilities` layer, and an unlayered rule beats every layered one no
+   matter the specificity — so an unlayered `.btn-gold { display: inline-block }`
+   silently defeats `hidden` and `sm:inline-block` on the same element, which is
+   exactly how the mobile header ended up showing the quote button twice.
+   --------------------------------------------------------------------------- */
+
+@layer base {
+  /* ---------------------------------------------------------------------------
+     Base
+     --------------------------------------------------------------------------- */
+
+  *,
+  *::before,
+  *::after {
+    border-radius: 0; /* Square corners throughout — guidelines p.11 */
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  body {
+    background-color: var(--color-surface-100);
+    color: var(--color-ink);
+    font-family: var(--font-text);
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 28px;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  /* Specifications only: output, dimensions, model codes, HS codes, serials.
+     Tabular figures wherever digits column up, which is most places. */
+  .spec {
+    font-family: var(--font-spec);
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 22px;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  /* ---------------------------------------------------------------------------
+     Type scale — guidelines p.7, transcribed exactly
+     --------------------------------------------------------------------------- */
+
+  .display-1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 64px;
+    line-height: 60px;
+    letter-spacing: -0.01em;
+  }
+
+  .display-2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 44px;
+    line-height: 46px;
+    letter-spacing: -0.01em;
+  }
+
+  .display-3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 30px;
+    line-height: 36px;
+  }
+
+  .lede {
+    font-family: var(--font-text);
+    font-weight: 300;
+    font-size: 20px;
+    line-height: 32px;
+  }
+
+  .body-copy {
+    font-family: var(--font-text);
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 28px;
+    max-width: 65ch; /* hold near 65 characters */
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 16px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .label {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 18px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* Unit symbols beside a figure. Deliberately NOT uppercased: kW is not KW and
+     kg is not KG, and "say the number" is worthless if the unit beside it is
+     wrong. Plex Mono, because a unit is part of a specification. */
+  .unit {
+    font-family: var(--font-spec);
+    font-weight: 500;
+    font-size: 15px;
+    line-height: 18px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  @media (max-width: 767px) {
+    .display-1 {
+      font-size: 40px;
+      line-height: 40px;
+    }
+    .display-2 {
+      font-size: 32px;
+      line-height: 34px;
+    }
+    .display-3 {
+      font-size: 24px;
+      line-height: 30px;
+    }
+    .lede {
+      font-size: 18px;
+      line-height: 29px;
+    }
+  }
+
+  /* ---------------------------------------------------------------------------
+     Controls
+     One gold button per view, ink label. Type on gold is ink, never white —
+     white on crown gold is 3.4:1 and fails; ink on crown gold is 5.5:1.
+     --------------------------------------------------------------------------- */
+
+  .btn-gold {
+    display: inline-block;
+    background-color: var(--color-crown-gold);
+    color: var(--color-ink);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 12px 24px;
+    border: 1px solid var(--color-crown-gold);
+    transition: background-color 120ms linear;
+  }
+
+  .btn-gold:hover {
+    background-color: var(--color-gold-deep);
+    border-color: var(--color-gold-deep);
+    color: var(--color-surface-100);
+  }
+
+  .btn-outline {
+    display: inline-block;
+    background-color: transparent;
+    color: var(--color-ink);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 12px 24px;
+    border: 1px solid var(--color-edge);
+    transition: border-color 120ms linear;
+  }
+
+  .btn-outline:hover {
+    border-color: var(--color-ink);
+  }
+
+  .btn-outline-reversed {
+    color: var(--color-surface-100);
+    border-color: rgb(255 255 255 / 0.35);
+  }
+
+  .btn-outline-reversed:hover {
+    border-color: var(--color-surface-100);
+  }
+
+  /* Gold never sets small text on a light ground — 3.2:1, fails at body size.
+     gold-deep measures 5.8:1. */
+  .link {
+    color: var(--color-gold-deep);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+  }
+
+  .link:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-edge);
+    outline-offset: 2px;
+  }
+
+  /* Reversed grounds: gold is legible on firebox, so crown gold is allowed for
+     links there. Measured 5.28:1 against #1A1713. */
+  .on-firebox .link {
+    color: var(--color-crown-gold);
+  }
+
+  /* ---------------------------------------------------------------------------
+     Rules — ruled, not shadowed. No drop shadows anywhere in this stylesheet.
+     --------------------------------------------------------------------------- */
+
+  .rule-hairline {
+    border-top: 1px solid var(--color-hairline);
+  }
+
+  .rule-gold {
+    border-top: 2px solid var(--color-crown-gold);
+  }
+}

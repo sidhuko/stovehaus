@@ -1,0 +1,42 @@
+---
+import type { SpecRow } from '../data/products';
+
+interface Props {
+  rows: SpecRow[];
+  /** Specs we do not have. Listed by name so an installer can see what to ask for. */
+  missing?: string[];
+}
+const { rows, missing = [] } = Astro.props;
+---
+
+{/*
+  Set specifications with tabular figures so columns line up (guidelines p.11).
+  Square corners, ruled rows, no shading beyond the surface tint.
+*/}
+<dl class="border-t border-hairline">
+  {
+    rows.map((row) => (
+      <div class="grid grid-cols-[1fr_auto] gap-6 py-3.5 border-b border-hairline">
+        <dt class="label font-normal text-ink-muted">{row.label}</dt>
+        <dd class="spec text-ink text-right">{row.value}</dd>
+      </div>
+    ))
+  }
+  {
+    missing.map((label) => (
+      <div class="grid grid-cols-[1fr_auto] gap-6 py-3.5 border-b border-hairline">
+        <dt class="label font-normal text-steel">{label}</dt>
+        <dd class="spec text-steel text-right">On request</dd>
+      </div>
+    ))
+  }
+</dl>
+
+{
+  missing.length > 0 && (
+    <p class="body-copy mt-5 text-ink-faint">
+      Figures marked <span class="spec">On request</span> have not been published yet. We would
+      rather send you a tested number than a confident one.
+    </p>
+  )
+}

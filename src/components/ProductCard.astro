@@ -1,0 +1,89 @@
+---
+import LineChip from './LineChip.astro';
+import { getLine, type Product } from '../data/products';
+
+interface Props {
+  product: Product;
+  href?: string;
+}
+const { product, href } = Astro.props;
+const line = getLine(product.line);
+
+/*
+  Card anatomy, guidelines p.10: "Line chip, name, the one figure the category
+  is bought on, two or three spec rows, then model code and lead time. No gold
+  on the card."
+
+  The figure takes the line's signal colour — that is the whole point of the
+  code. Everything else on the card is ink, steel and hairline.
+*/
+const FIGURE = {
+  ember: 'text-ember',
+  spring: 'text-spring',
+  dusk: 'text-dusk',
+} as const;
+
+const isPending = product.status === 'pending';
+const Tag = href && !isPending ? 'a' : 'div';
+---
+
+{
+  isPending ? (
+    /*
+      An empty slot. It carries no name, no number and no model code, because a
+      slot that looks like a product is how invented specifications reach a
+      dealer. It says what it is and stops.
+    */
+    <div class="border border-dashed border-edge bg-surface-100 p-6 flex flex-col min-h-70">
+      <LineChip line={line} class="self-start opacity-60" />
+      <div class="mt-auto pt-8">
+        <p class="label text-steel">Model slot</p>
+        <p class="body-copy mt-2 text-ink-faint">
+          Specifications on request. We publish a figure once it has been tested, not before.
+        </p>
+      </div>
+    </div>
+  ) : (
+    <Tag
+      href={href}
+      class:list={[
+        'group border border-hairline bg-surface-100 p-6 flex flex-col min-h-70',
+        href && 'hover:border-edge transition-colors',
+      ]}
+    >
+      <LineChip line={line} class="self-start" />
+
+      <h3 class="display-3 mt-5 text-ink">{product.name}</h3>
+
+      {product.headlineFigure && (
+        <p class="mt-4 flex items-baseline gap-1.5">
+          <span
+            class:list={[
+              'font-display font-semibold text-[44px] leading-none tabular-nums',
+              FIGURE[line.token],
+            ]}
+          >
+            {product.headlineFigure.value}
+          </span>
+          <span class:list={['unit', FIGURE[line.token]]}>{product.headlineFigure.unit}</span>
+        </p>
+      )}
+
+      {product.specs && (
+        <dl class="mt-5 border-t border-hairline">
+          {product.specs.slice(0, 3).map((row) => (
+            <div class="flex justify-between gap-4 py-2 border-b border-hairline">
+              <dt class="label text-ink-muted font-normal">{row.label}</dt>
+              <dd class="spec text-ink text-right">{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
+      <div class="mt-auto pt-6 flex items-baseline justify-between gap-4">
+        <span class="spec text-steel">{product.modelCode ?? 'Model code pending'}</span>
+        {product.leadTime && <span class="spec text-steel">{product.leadTime}</span>}
+      </div>
+    </Tag>
+  )
+}

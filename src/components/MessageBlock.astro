@@ -1,0 +1,32 @@
+---
+interface Props {
+  /** Indices into MESSAGES — guidelines p.9, in priority order. */
+  messages: readonly { n: string; title: string; body: string }[];
+  heading?: string;
+  ground?: 'surface-100' | 'surface-200';
+}
+const { messages, heading, ground = 'surface-200' } = Astro.props;
+
+const GROUND = {
+  'surface-100': 'bg-surface-100',
+  'surface-200': 'bg-surface-200',
+} as const;
+---
+
+<section class:list={[GROUND[ground], 'py-20']}>
+  <div class="mx-auto max-w-7xl px-6 lg:px-10">
+    {heading && <h2 class="display-2 text-ink max-w-2xl">{heading}</h2>}
+
+    <div class:list={['grid gap-10 md:grid-cols-2 lg:gap-14', heading && 'mt-14']}>
+      {
+        messages.map((message) => (
+          <div class="rule-hairline pt-6">
+            <p class="spec text-steel">{message.n}</p>
+            <h3 class="display-3 mt-3 text-ink">{message.title}</h3>
+            <p class="body-copy mt-3 text-ink-muted">{message.body}</p>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

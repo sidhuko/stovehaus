@@ -1,0 +1,85 @@
+---
+import Base from '../layouts/Base.astro';
+import MessageBlock from '../components/MessageBlock.astro';
+import { MESSAGES } from '../data/site';
+
+/*
+  Message 02 carries this page: "One shop, one crew, every stove fired before
+  it's crated."
+
+  Voice rule from p.8: proud of where it's made, without ceremony — a fact in a
+  sentence, not a flag on a banner. And Mexican fabrication is a craft story,
+  not a cost story. The cost argument lives on the dealers page, where it is a
+  margin argument and belongs.
+
+  Rule 2 is the constraint that shapes this page: every claim carries a number
+  or a name, or it gets cut. We have neither the crew's names nor shop figures
+  yet, so this page describes process rather than asserting scale.
+*/
+
+const PROCESS = [
+  {
+    n: '01',
+    title: 'Cut from plate',
+    body: 'A firebox starts as flat steel on a bench, cut to a pattern. Not a stamped shell folded from thin stock.',
+  },
+  {
+    n: '02',
+    title: 'Seam-welded',
+    body: 'Seams are welded through, not tacked. The seam is the part that fails first on a stove fed hard for twenty years, so it is the part that gets the time.',
+  },
+  {
+    n: '03',
+    title: 'Fired before crating',
+    body: 'Every stove is loaded, brought up to temperature and checked hot. A cold leak test tells you less than a hot one.',
+  },
+  {
+    n: '04',
+    title: 'Crated and shipped north',
+    body: 'Stencilled, documented in metric and imperial, and freighted to the United States and Canada.',
+  },
+];
+---
+
+<Base
+  title="The Shop"
+  description="One shop, one crew. How a Stovehaus heater is cut, welded, fired and crated in Mexico."
+>
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 pt-16 pb-4">
+    <p class="eyebrow text-steel">The shop</p>
+    <h1 class="display-1 mt-5 text-ink max-w-3xl">One shop, one crew.</h1>
+    <p class="lede mt-6 text-ink-muted max-w-2xl">
+      Stovehaus fabricates in Mexico. That is a fact about how the work gets done, not a line in a
+      pitch — it means the people who weld the seams are the people who fire the stove before it
+      is crated.
+    </p>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 py-16">
+    <div class="grid gap-px bg-hairline md:grid-cols-2 border border-hairline">
+      {
+        PROCESS.map((step) => (
+          <div class="bg-surface-100 p-8 lg:p-10">
+            <p class="spec text-steel">{step.n}</p>
+            <h2 class="display-3 mt-3 text-ink">{step.title}</h2>
+            <p class="body-copy mt-3 text-ink-muted">{step.body}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 pb-16">
+    <div class="border border-hairline bg-surface-200 p-8 lg:p-12 max-w-3xl">
+      <h2 class="display-3 text-ink">Why Mexico matters to a dealer</h2>
+      <p class="body-copy mt-4 text-ink-muted">
+        Two practical things follow from fabricating here rather than in Europe. The freight run
+        north is short, which is what makes the margin on this line work against an import. And a
+        replacement part does not cross an ocean to reach an installer with a job half finished.
+      </p>
+      <a href="/dealers" class="btn-outline mt-8">Dealer information</a>
+    </div>
+  </section>
+
+  <MessageBlock messages={[MESSAGES[1], MESSAGES[0]]} />
+</Base>

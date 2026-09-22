@@ -1,0 +1,115 @@
+---
+import { Image } from 'astro:assets';
+import { getImage } from '../data/images';
+
+interface Props {
+  eyebrow: string;
+  /** Held under 38 characters — guidelines p.10. */
+  headline: string;
+  lede: string;
+  image?: string;
+  imageAlt?: string;
+  /**
+   * Where to hold the crop. The hero is a wide band and the library is mostly
+   * portrait, so the default centre crop lands on dead space. With firebox at
+   * 72% over the top there is no latitude — the crop has to be on the subject
+   * or the photograph may as well not be there.
+   */
+  imagePosition?: string;
+  ctaHref?: string;
+  ctaLabel?: string;
+  secondaryHref?: string;
+  secondaryLabel?: string;
+}
+
+const {
+  eyebrow,
+  headline,
+  lede,
+  image,
+  imageAlt = '',
+  imagePosition = 'center',
+  ctaHref,
+  ctaLabel,
+  secondaryHref,
+  secondaryLabel,
+} = Astro.props;
+
+const photo = getImage(image);
+
+/*
+  Guidelines p.10: "Full-bleed firebox band. Display headline, one lede under 38
+  characters, one gold button. Over a photograph, lay firebox at 72% opacity
+  first. The tagline does not appear here; it signs off in the footer."
+
+  So: no tagline, exactly one gold button, and the scrim is firebox at 0.72 —
+  not a black gradient, which would be an effect rather than a ground.
+*/
+if (headline.length > 38) {
+  throw new Error(
+    `Hero headline must be under 38 characters (guidelines p.10). Got ${headline.length}: "${headline}"`
+  );
+}
+---
+
+<section class="relative bg-firebox on-firebox text-surface-100 overflow-hidden">
+  {
+    photo && (
+      <>
+        {/*
+          width/height are given explicitly. Without them Astro carries the
+          plate's intrinsic size through to the markup, which on these files
+          means a 3200px or 4672px `src` fallback — a multi-megabyte hero on
+          any browser that ignores the srcset.
+        */}
+        <Image
+          src={photo}
+          alt={imageAlt}
+          width={1920}
+          height={900}
+          widths={[768, 1280, 1920]}
+          sizes="100vw"
+          loading="eager"
+          fetchpriority="high"
+          style={`object-position: ${imagePosition}`}
+          class="absolute inset-0 h-full w-full object-cover"
+        />
+        {/* Firebox at 72%, laid over the photograph first. */}
+        <div class="absolute inset-0 bg-firebox/72" aria-hidden="true"></div>
+      </>
+    )
+  }
+
+  <div class="relative mx-auto max-w-7xl px-6 lg:px-10 py-24 md:py-32 lg:py-40">
+    <div class="max-w-2xl">
+      {/*
+        Crown gold is 5.28:1 on flat firebox and passes. Over a photograph it
+        does not: the 72% scrim only guarantees the ground is no lighter than
+        #5A5855, where gold measures 2.10:1. Raising the scrim does not rescue
+        it either — even at 88% gold reaches only 3.73:1. So the eyebrow is
+        gold on a flat band and surface-100 over a plate, which holds 6.68:1
+        against that same worst case.
+      */}
+      <p class:list={['eyebrow', photo ? 'text-surface-100' : 'text-crown-gold']}>{eyebrow}</p>
+      <h1 class="display-1 mt-6 text-surface-100">{headline}</h1>
+      <p class="lede mt-6 text-surface-100/85 max-w-xl">{lede}</p>
+
+      {
+        (ctaHref || secondaryHref) && (
+          <div class="mt-10 flex flex-wrap items-center gap-4">
+            {ctaHref && ctaLabel && (
+              <a href={ctaHref} class="btn-gold">
+                {ctaLabel}
+              </a>
+            )}
+            {secondaryHref && secondaryLabel && (
+              <a href={secondaryHref} class="btn-outline btn-outline-reversed">
+                {secondaryLabel}
+              </a>
+            )}
+          </div>
+        )
+      }
+    </div>
+  </div>
+</section>

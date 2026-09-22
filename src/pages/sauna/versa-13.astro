@@ -1,0 +1,142 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import LineChip from '../../components/LineChip.astro';
+import SpecTable from '../../components/SpecTable.astro';
+import { getLine, PRODUCTS } from '../../data/products';
+import { getImage } from '../../data/images';
+import { SITE, CERTIFICATION_STATUS } from '../../data/site';
+
+const product = PRODUCTS.find((p) => p.slug === 'versa-13')!;
+const line = getLine(product.line);
+const photo = getImage(line.image);
+
+/*
+  Specifications we do not have. Listed by name rather than omitted, because an
+  installer needs the flue diameter and the clearances to quote a job, and a
+  page that quietly leaves them out looks complete when it is not.
+*/
+const MISSING = [
+  'Firebox plate thickness',
+  'Flue diameter',
+  'Clearance to combustibles',
+  'Heat-up time',
+  'Shipping weight',
+  'HS code',
+];
+---
+
+<Base
+  title={product.name!}
+  path="/sauna"
+  description={`${product.name} — ${product.headlineFigure!.value} ${product.headlineFigure!.unit} wood-fired sauna heater, 6–13 m². Hand-welded in Mexico.`}
+>
+  <article>
+    {/* Masthead. A 2px gold rule and nothing else in gold — guidelines p.11. */}
+    <header class="mx-auto max-w-7xl px-6 lg:px-10 pt-12">
+      <nav aria-label="Breadcrumb" class="label text-ink-muted">
+        <a href="/sauna" class="hover:text-ink">Sauna</a>
+        <span class="text-steel mx-2">/</span>
+        <span class="text-ink">{product.name}</span>
+      </nav>
+
+      <div class="rule-gold mt-5 pt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16 items-stretch">
+        <div>
+          <LineChip line={line} />
+          <h1 class="display-1 mt-5 text-ink">{product.name}</h1>
+          <p class="lede mt-5 text-ink-muted max-w-xl">{product.blurb}</p>
+
+          {/* The three figures this heater is bought on, coded ember. */}
+          <dl class="mt-10 grid grid-cols-3 gap-6 border-t border-hairline pt-6">
+            {
+              [
+                ['Room capacity', '6–13', 'm²'],
+                ['Heater stones', '110', 'kg'],
+                ['Power rating', '15.4', 'kW'],
+              ].map(([label, value, unit]) => (
+                <div>
+                  <dt class="eyebrow text-steel">{label}</dt>
+                  <dd class="mt-2.5 flex items-baseline gap-1">
+                    <span class="font-display font-semibold text-[32px] leading-none tabular-nums text-ember">
+                      {value}
+                    </span>
+                    <span class="unit text-ember">{unit}</span>
+                  </dd>
+                </div>
+              ))
+            }
+          </dl>
+
+          <div class="mt-10 flex flex-wrap items-center gap-4">
+            <a href="/quote" class="btn-gold">Request a quote</a>
+            <a href="/specs" class="btn-outline">All specifications</a>
+          </div>
+        </div>
+
+        {
+          photo && (
+            <Image
+              src={photo}
+              alt={line.imageAlt ?? ''}
+              width={600}
+              height={750}
+              widths={[600, 1200]}
+              sizes="(min-width: 1024px) 600px, 100vw"
+              loading="eager"
+              class="w-full h-full aspect-4/5 lg:aspect-auto object-cover border border-hairline"
+              style="object-position: center 62%"
+            />
+          )
+        }
+      </div>
+    </header>
+
+    {/* Spec sheet — the page a dealer forwards to an installer (p.11). */}
+    <section class="mx-auto max-w-7xl px-6 lg:px-10 py-20">
+      <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16 items-start">
+        <div>
+          <h2 class="display-3 text-ink">Specifications</h2>
+          <p class="body-copy mt-3 text-ink-muted">
+            Metric first, imperial in parentheses. Tabular figures so columns line up when this is
+            printed or forwarded.
+          </p>
+          <div class="mt-8">
+            <SpecTable rows={product.specs!} missing={MISSING} />
+          </div>
+        </div>
+
+        <div class="border border-hairline bg-surface-200 p-8">
+          <p class="eyebrow text-steel">Ordering</p>
+          <dl class="mt-6 border-t border-hairline">
+            {
+              [
+                ['Model code', 'Pending'],
+                ['Line', 'Sauna · wood-fired'],
+                ['Origin', 'Mexico'],
+                ['Lead time', 'On request'],
+                ['Incoterm', 'On request'],
+              ].map(([label, value]) => (
+                <div class="grid grid-cols-[1fr_auto] gap-6 py-3.5 border-b border-hairline">
+                  <dt class="label font-normal text-ink-muted">{label}</dt>
+                  <dd class="spec text-ink text-right">{value}</dd>
+                </div>
+              ))
+            }
+          </dl>
+
+          <p class="body-copy mt-6 text-ink-faint">
+            A quote from us never leaves without incoterm, currency, validity date, lead time and
+            HS code on it. Leaving those off costs more deals than the price does.
+          </p>
+
+          <a href={`tel:${SITE.phoneHref}`} class="spec link mt-6 inline-block">{SITE.phone}</a>
+        </div>
+      </div>
+
+      <div class="mt-16 border border-hairline bg-gold-wash p-8">
+        <p class="eyebrow text-gold-deep">Certification</p>
+        <p class="body-copy mt-3 text-ink">{CERTIFICATION_STATUS.text}</p>
+      </div>
+    </section>
+  </article>
+</Base>

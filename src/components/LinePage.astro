@@ -1,0 +1,95 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from './Hero.astro';
+import ProductCard from './ProductCard.astro';
+import { getLine, productsInLine, type LineId } from '../data/products';
+import { CERTIFICATION_STATUS } from '../data/site';
+
+interface Props {
+  id: LineId;
+  /** Copy specific to this line — written per line, not templated. */
+  intro: string;
+  /** What this line is actually bought on, spelled out for a skimming reader. */
+  buyingNotes: { label: string; body: string }[];
+}
+
+const { id, intro, buyingNotes } = Astro.props;
+const line = getLine(id);
+const products = productsInLine(id);
+const published = products.filter((p) => p.status === 'published');
+---
+
+<Base title={line.name} path={`/${id}`} description={line.lede}>
+  <Hero
+    eyebrow={line.eyebrow}
+    headline={line.headline}
+    lede={line.lede}
+    image={line.image}
+    imageAlt={line.imageAlt}
+    imagePosition={line.imagePosition}
+    ctaHref="/quote"
+    ctaLabel="Request a quote"
+  />
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 py-20">
+    <div class="grid gap-12 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:gap-20 items-start">
+      <div>
+        <h2 class="display-2 text-ink">The line</h2>
+        <p class="body-copy mt-5 text-ink-muted">{intro}</p>
+      </div>
+
+      <div class="border border-hairline bg-surface-200 p-8">
+        <p class="eyebrow text-steel">Bought on</p>
+        <p class="display-3 mt-3 text-ink">{line.boughtOn}</p>
+        <dl class="mt-7 border-t border-hairline">
+          {
+            buyingNotes.map((note) => (
+              <div class="py-3.5 border-b border-hairline">
+                <dt class="label font-normal text-ink-muted">{note.label}</dt>
+                <dd class="body-copy mt-1.5 text-ink-faint">{note.body}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+    </div>
+
+    {/* Models. Published first, then the empty slots, which read as empty. */}
+    <div class="mt-20">
+      <div class="flex flex-wrap items-baseline justify-between gap-4 border-b border-hairline pb-4">
+        <h2 class="display-3 text-ink">Models</h2>
+        <p class="spec text-steel">
+          {published.length} published · {products.length - published.length} in testing
+        </p>
+      </div>
+
+      <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          products.map((product) => (
+            <ProductCard
+              product={product}
+              href={product.status === 'published' ? `/${id}/${product.slug}` : undefined}
+            />
+          ))
+        }
+      </div>
+
+      {
+        published.length === 0 && (
+          <p class="body-copy mt-8 text-ink-muted">
+            Nothing in this line is published yet. We are testing, and a figure goes on this page
+            once it has been measured rather than estimated. If you need specifications now, ask
+            and we will tell you exactly where the line stands.
+          </p>
+        )
+      }
+    </div>
+
+    {/* Certification — stated exactly, per guidelines p.9. */}
+    <div class="mt-20 border border-hairline bg-gold-wash p-8">
+      <p class="eyebrow text-gold-deep">Certification</p>
+      <p class="body-copy mt-3 text-ink">{CERTIFICATION_STATUS.text}</p>
+      <a href="/quote" class="btn-outline mt-7">Ask about this line</a>
+    </div>
+  </section>
+</Base>

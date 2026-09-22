@@ -1,0 +1,136 @@
+---
+import Base from '../layouts/Base.astro';
+import LineChip from '../components/LineChip.astro';
+import { PRODUCTS, getLine } from '../data/products';
+import { CERTIFICATION_STATUS } from '../data/site';
+
+const published = PRODUCTS.filter((p) => p.status === 'published');
+const pendingCount = PRODUCTS.length - published.length;
+
+/*
+  The model code convention as proposed in the guidelines (p.9). Shown here so a
+  dealer can read a code off a crate or an etched plate, even while our own
+  catalogue has not adopted it yet — see BRAND.md open items on naming.
+*/
+const CODE_PARTS = [
+  ['SH', 'Stovehaus'],
+  ['SN / JZ / FP', 'Line — sauna, jacuzzi, fire pit'],
+  ['18', 'Output in kW'],
+  ['CS / BK', 'Finish — corten steel, black'],
+];
+---
+
+<Base
+  title="Specs"
+  description="Model codes, published specifications and certification status for the Stovehaus catalogue."
+>
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 pt-16">
+    <p class="eyebrow text-steel">Specifications</p>
+    <h1 class="display-1 mt-5 text-ink max-w-3xl">Say the number.</h1>
+    <p class="lede mt-6 text-ink-muted max-w-2xl">
+      Buyers choose on output, room volume, heat-up time and steel thickness. Everything we have
+      measured is on this page. Everything we have not is marked as such.
+    </p>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 py-16">
+    <div class="flex flex-wrap items-baseline justify-between gap-4 border-b border-hairline pb-4">
+      <h2 class="display-3 text-ink">Published</h2>
+      <p class="spec text-steel">{published.length} of {PRODUCTS.length} models</p>
+    </div>
+
+    <div class="mt-8 overflow-x-auto">
+      <table class="w-full min-w-[720px] border-collapse">
+        <thead>
+          <tr class="border-b border-hairline">
+            <th class="eyebrow text-steel text-left py-3 pr-6">Line</th>
+            <th class="eyebrow text-steel text-left py-3 pr-6">Model</th>
+            <th class="eyebrow text-steel text-left py-3 pr-6">Model code</th>
+            <th class="eyebrow text-steel text-right py-3 pr-6">Output</th>
+            <th class="eyebrow text-steel text-right py-3">Capacity</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            published.map((product) => {
+              const line = getLine(product.line);
+              const capacity = product.specs?.find((s) =>
+                s.label.toLowerCase().includes('capacity')
+              );
+              return (
+                <tr class="border-b border-hairline">
+                  <td class="py-4 pr-6">
+                    <LineChip line={line} />
+                  </td>
+                  <td class="py-4 pr-6">
+                    <a href={`/${product.line}/${product.slug}`} class="label link">
+                      {product.name}
+                    </a>
+                  </td>
+                  <td class="spec text-steel py-4 pr-6">{product.modelCode ?? 'Pending'}</td>
+                  <td class="spec text-ink text-right py-4 pr-6">
+                    {product.headlineFigure
+                      ? `${product.headlineFigure.value} ${product.headlineFigure.unit}`
+                      : '—'}
+                  </td>
+                  <td class="spec text-ink text-right py-4">{capacity?.value ?? '—'}</td>
+                </tr>
+              );
+            })
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="body-copy mt-6 text-ink-faint">
+      {pendingCount} further model slots are in testing across the three lines. They are listed on
+      each line page as empty slots rather than shown here with estimated figures.
+    </p>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 pb-16">
+    <div class="grid gap-12 lg:grid-cols-2 lg:gap-20 items-start">
+      <div>
+        <h2 class="display-3 text-ink">Reading a model code</h2>
+        <p class="body-copy mt-4 text-ink-muted">
+          The code is stamped on the etched plate and stencilled on the crate. It reads
+          <span class="spec">SH – line – output – finish</span>.
+        </p>
+        <dl class="mt-8 border-t border-hairline">
+          {
+            CODE_PARTS.map(([code, meaning]) => (
+              <div class="grid grid-cols-[auto_1fr] gap-6 py-3.5 border-b border-hairline">
+                <dt class="spec text-ink">{code}</dt>
+                <dd class="body-copy text-ink-muted text-right">{meaning}</dd>
+              </div>
+            ))
+          }
+        </dl>
+        <p class="body-copy mt-5 text-ink-faint">
+          Example: <span class="spec">SH-SN-18-CS</span> is a sauna heater, 18 kW, corten steel.
+        </p>
+      </div>
+
+      <div>
+        <h2 class="display-3 text-ink">Units</h2>
+        <p class="body-copy mt-4 text-ink-muted">
+          Anything crossing the border is given metric first with imperial in parentheses, on every
+          dimension. Specifications are set with tabular figures so columns line up when a sheet is
+          printed or forwarded to an installer.
+        </p>
+
+        <div class="mt-8 border border-hairline bg-gold-wash p-8">
+          <p class="eyebrow text-gold-deep">Certification</p>
+          <p class="body-copy mt-3 text-ink">{CERTIFICATION_STATUS.text}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 pb-8">
+    <div class="rule-gold pt-8 flex flex-wrap items-baseline justify-between gap-5">
+      <p class="display-3 text-ink max-w-xl">Need a figure that is not here?</p>
+      <a href="/quote" class="btn-gold">Request a quote</a>
+    </div>
+  </section>
+</Base>

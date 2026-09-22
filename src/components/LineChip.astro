@@ -1,0 +1,27 @@
+---
+import type { ProductLine } from '../data/products';
+
+interface Props {
+  line: ProductLine;
+  class?: string;
+}
+const { line, class: className = '' } = Astro.props;
+
+/*
+  Ember and spring are a coding system, not accents: fire marks the sauna line,
+  water marks the jacuzzi line, and dusk — the proposed extension — marks the
+  gas fire pit line. Spend any of the three on a button or a highlight and the
+  code stops working, so they appear only here and on the headline figure.
+
+  Tailwind needs whole class names at build time, so these are written out.
+*/
+const CHIP = {
+  ember: 'bg-ember-wash text-ember',
+  spring: 'bg-spring-wash text-spring',
+  dusk: 'bg-dusk-wash text-dusk',
+} as const;
+---
+
+<span class:list={['eyebrow inline-block px-2.5 py-1.5', CHIP[line.token], className]}>
+  {line.chip}
+</span>

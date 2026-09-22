@@ -1,0 +1,57 @@
+---
+/*
+  Two paths, deliberately equal.
+
+  The guidelines say "write for the dealer first — the end buyer will read a
+  dealer's page; the dealer will never read an end buyer's page." This site
+  weights the two equally instead, so the fork has to be genuinely even:
+  identical panel size, identical treatment, no gold on either, neither first
+  in reading order by design.
+*/
+const PATHS = [
+  {
+    eyebrow: 'For dealers and installers',
+    title: 'Stocking or specifying the line',
+    body: 'Margin, lead times, freight from Saltillo, clearances and flue spec, and exactly where each line stands on certification.',
+    items: ['Dealer margin and terms', 'Lead time and freight', 'Clearances and flue spec'],
+    href: '/dealers',
+    cta: 'Dealer information',
+  },
+  {
+    eyebrow: 'For cabins, lodges and properties',
+    title: 'Putting one on your property',
+    body: 'What we build, how it is built, and who builds it. Start with the heaters, then talk to a dealer near you.',
+    items: ['Sauna heaters', 'Jacuzzi heaters', 'Gas fire pits'],
+    href: '/sauna',
+    cta: 'See the heaters',
+  },
+];
+---
+
+<section class="mx-auto max-w-7xl px-6 lg:px-10 py-20">
+  <div class="grid gap-px bg-hairline md:grid-cols-2 border border-hairline">
+    {
+      PATHS.map((path) => (
+        <div class="bg-surface-100 p-8 lg:p-10 flex flex-col">
+          <p class="eyebrow text-steel">{path.eyebrow}</p>
+          <h2 class="display-3 mt-4 text-ink">{path.title}</h2>
+          <p class="body-copy mt-4 text-ink-muted">{path.body}</p>
+
+          <ul class="mt-7 border-t border-hairline">
+            {path.items.map((item) => (
+              <li class="label font-normal text-ink-muted py-2.5 border-b border-hairline">
+                {item}
+              </li>
+            ))}
+          </ul>
+
+          <div class="mt-auto pt-8">
+            <a href={path.href} class="btn-outline">
+              {path.cta}
+            </a>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</section>
