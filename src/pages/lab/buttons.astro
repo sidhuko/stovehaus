@@ -1,0 +1,195 @@
+---
+import Base from '../../layouts/Base.astro';
+
+/*
+  Internal. Not in the nav, noindex, and nothing links to it — it exists so the
+  four treatments can be judged against the brand in one view rather than
+  argued about in the abstract.
+
+  Each row shows the trend implemented literally (fx-) beside a brand-native
+  form (bx-) and names the rule at stake. Three of the four break a written
+  rule; one does not.
+*/
+
+type Demo = {
+  n: string;
+  title: string;
+  trend: string;
+  tech: string;
+  rule: string | null;
+  reconciliation: string;
+  literal: string;
+  native: string;
+  /** Needs something behind it to be worth anything. */
+  onPlate?: boolean;
+  adopted: string;
+};
+
+const DEMOS: Demo[] = [
+  {
+    n: '01',
+    title: 'The 3D tactile press',
+    trend: 'High-tactility physical realism, away from flat design.',
+    tech: 'A layered depth box under the face. On :active the face translates down the Y axis and compresses the depth layer, so the control clicks.',
+    rule: 'p.2 "ruled rather than shadowed" · p.5 "no drop shadow, glow, outer stroke or emboss"',
+    reconciliation:
+      'The mechanic survives intact. The depth layer becomes a hard offset with zero blur — which is a rule, not a shadow — in gold-deep under a gold face, so no new colour enters the page. It reads as letterpress, which is nearer this brand than a soft shadow ever was.',
+    literal: 'fx-press',
+    native: 'bx-press',
+    adopted: 'Adopted on every gold CTA.',
+  },
+  {
+    n: '02',
+    title: 'The holographic shimmer',
+    trend: 'A premium, non-intrusive loop for high-conversion CTAs.',
+    tech: 'An angled semi-transparent linear-gradient band travelling across the face on a keyframe loop.',
+    rule: 'p.2 "never a gradient and never a texture" · the gold button is already the one gold element in its view',
+    reconciliation:
+      'This is the one that cannot be fully reconciled — a shimmer is a moving gradient, and the rule is explicit. The native form is quieter rather than compliant: one slow pass of page-ground white at low alpha with a long rest, no saturation shift. Light crossing brushed steel, not holographic foil.',
+    literal: 'fx-shimmer',
+    native: 'bx-shimmer',
+    adopted: 'Not adopted. Available as a one-line opt-in.',
+  },
+  {
+    n: '03',
+    title: 'The glassmorphic frosted pill',
+    trend: 'The sleek look of modern AI platforms and developer tooling.',
+    tech: 'backdrop-filter: blur() with a semi-transparent outline, picking up ambient colour from behind the control.',
+    rule: 'p.5 "no rounded container" — the pill shape specifically',
+    reconciliation:
+      'The frost stays and the pill goes. Square corners, hairline outline at the brand alpha. The blur is arguably not an "effect" in the sense p.5 means — it adds no colour of its own and it only exists to sample what is already there.',
+    literal: 'fx-frost',
+    native: 'bx-frost',
+    onPlate: true,
+    adopted: 'Adopted on the hero secondary control, where a photograph sits behind it.',
+  },
+  {
+    n: '04',
+    title: 'Dynamic micro-interaction — liquid fill',
+    trend: 'Asymmetrical hover responses that change the structural hierarchy.',
+    tech: 'A pseudo-element mask scaling out from the point the cursor crossed the edge, switching the label colour as it passes.',
+    rule: null,
+    reconciliation:
+      'Nothing to reconcile — no shadow, no gradient, no rounded container, no new colour. It is a colour transition with a direction. Both ends are measured: ink on crown gold at 5.52:1 before the fill, surface-100 on ink at 17.59:1 after it, and the label never passes through white-on-gold, which is the palette’s one forbidden pairing at 3.38:1.',
+    literal: 'fx-liquid',
+    native: 'bx-liquid',
+    adopted: 'Adopted on every gold CTA.',
+  },
+];
+---
+
+<Base
+  title="Button effects"
+  description="Internal: four button treatments against the brand rules."
+  noindex
+>
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 pt-16">
+    <p class="eyebrow text-steel">Internal · not linked</p>
+    <h1 class="display-1 mt-5 text-ink max-w-3xl">Four effects, two readings.</h1>
+    <p class="lede mt-6 text-ink-muted max-w-2xl">
+      Each row is the trend as specified, beside a form that keeps the mechanic and drops what the
+      identity kit forbids. Three of the four break a written rule. Hover and click everything.
+    </p>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 py-16 space-y-px bg-hairline border border-hairline">
+    {
+      DEMOS.map((demo) => (
+        <article class="bg-surface-100 p-8 lg:p-12">
+          <div class="flex flex-wrap items-baseline gap-4">
+            <span class="spec text-steel">{demo.n}</span>
+            <h2 class="display-2 text-ink">{demo.title}</h2>
+          </div>
+
+          <div class="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
+            <div>
+              <dl class="border-t border-hairline">
+                <div class="py-3.5 border-b border-hairline">
+                  <dt class="label font-normal text-ink-muted">The trend</dt>
+                  <dd class="body-copy mt-1.5 text-ink">{demo.trend}</dd>
+                </div>
+                <div class="py-3.5 border-b border-hairline">
+                  <dt class="label font-normal text-ink-muted">The tech</dt>
+                  <dd class="body-copy mt-1.5 text-ink">{demo.tech}</dd>
+                </div>
+                <div class="py-3.5 border-b border-hairline">
+                  <dt class="label font-normal text-ink-muted">Rule at stake</dt>
+                  <dd class="body-copy mt-1.5 text-ink">
+                    {demo.rule ?? 'None. Brand-native as specified.'}
+                  </dd>
+                </div>
+              </dl>
+
+              <p class="body-copy mt-6 text-ink-muted">{demo.reconciliation}</p>
+              <p class="spec mt-5 text-steel">{demo.adopted}</p>
+            </div>
+
+            <div class="grid gap-px bg-hairline border border-hairline">
+              {/* Literal */}
+              <div
+                class:list={[
+                  'p-8 flex flex-col items-start gap-4',
+                  demo.onPlate ? 'bg-firebox demo-plate' : 'bg-surface-200',
+                ]}
+              >
+                <p class:list={['eyebrow', demo.onPlate ? 'text-surface-100/70' : 'text-steel']}>
+                  As specified · .{demo.literal}
+                </p>
+                <button type="button" class:list={['btn-gold', demo.literal, 'cursor-pointer']}>
+                  Request a quote
+                </button>
+              </div>
+
+              {/* Brand-native */}
+              <div
+                class:list={[
+                  'p-8 flex flex-col items-start gap-4',
+                  demo.onPlate ? 'bg-firebox demo-plate' : 'bg-surface-200',
+                ]}
+              >
+                <p class:list={['eyebrow', demo.onPlate ? 'text-surface-100/70' : 'text-steel']}>
+                  Brand-native · .{demo.native}
+                </p>
+                <button
+                  type="button"
+                  class:list={[
+                    demo.onPlate ? 'btn-outline' : 'btn-gold',
+                    demo.native,
+                    'cursor-pointer',
+                  ]}
+                >
+                  {demo.onPlate ? 'See the heaters' : 'Request a quote'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+      ))
+    }
+  </section>
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 pb-20">
+    <div class="rule-gold pt-8 max-w-3xl">
+      <h2 class="display-3 text-ink">What is live</h2>
+      <p class="body-copy mt-4 text-ink-muted">
+        Every gold CTA on the site carries <span class="spec">bx-press bx-liquid</span>. The hero's
+        secondary control carries <span class="spec">bx-frost</span> where a photograph sits behind
+        it, and falls back to the flat reversed outline on a plain firebox band. The shimmer is
+        built and not used — it is the only one of the four with no honest way past the "never a
+        gradient" rule, so adopting it is a decision to suspend that rule rather than a detail.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* The frost has nothing to sample on a flat swatch, so the demo plate gives
+     it something: the same firebox ground the hero uses, plus a little
+     structure so the blur is visible at all. */
+  .demo-plate {
+    background-image:
+      radial-gradient(circle at 20% 30%, rgb(178 61 22 / 0.55), transparent 45%),
+      radial-gradient(circle at 75% 60%, rgb(178 132 27 / 0.45), transparent 50%),
+      radial-gradient(circle at 50% 90%, rgb(46 95 102 / 0.4), transparent 55%);
+  }
+</style>

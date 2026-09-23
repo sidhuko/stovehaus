@@ -1,0 +1,329 @@
+/* ===========================================================================
+   STOVEHAUS — button effects
+   ===========================================================================
+
+   Four modern button treatments, each in two forms:
+
+     .fx-*        the trend implemented literally, as specified
+     .bx-*        a brand-native form — same mechanic, ornament removed
+
+   Read this before using one. The identity kit is unusually explicit about
+   effects, and three of these four break a written rule:
+
+     p.2  "Heavy, not loud. Square-cornered layouts, RULED RATHER THAN
+           SHADOWED... Gold is one colour used once per view, NEVER A GRADIENT
+           and never a texture. If a page looks expensive because of an effect,
+           the effect is wrong."
+     p.5  "Effects. No drop shadow, glow, outer stroke or emboss."
+          "Boxed. No rounded container, keyline frame or circle crop."
+
+   So each block below states which rule it touches and what the `.bx-` form
+   does instead. `scripts/audit-brand.mjs` reports the suspensions rather than
+   silently passing them.
+
+   Everything lives in @layer components. An unlayered rule beats every layered
+   one regardless of specificity, and that has already cost this project one
+   bug — see the note in global.css.
+   =========================================================================== */
+
+@layer components {
+  /* -------------------------------------------------------------------------
+     1 — THE 3D TACTILE PRESS
+     Mechanic: a depth layer under the control, compressed on :active by
+     translating the face down onto it. The click is the point.
+
+     RULE TOUCHED: p.2 "ruled rather than shadowed", p.5 "no drop shadow".
+
+     .bx-press keeps the whole mechanic and loses nothing: the depth layer is a
+     HARD offset with zero blur, which is a rule, not a shadow. It reads as
+     letterpress — ink on a plate — which is closer to the brand than a soft
+     drop shadow ever was. Depth is gold-deep under a gold face: the same
+     colour family, one step darker, so no new colour enters the page.
+     ------------------------------------------------------------------------- */
+
+  .fx-press,
+  .bx-press {
+    position: relative;
+    transition:
+      transform 90ms cubic-bezier(0.3, 0.7, 0.4, 1),
+      box-shadow 90ms cubic-bezier(0.3, 0.7, 0.4, 1);
+    will-change: transform;
+  }
+
+  /* Literal: layered, blurred shadow box. */
+  .fx-press {
+    box-shadow:
+      0 5px 0 0 #6b5010,
+      0 8px 14px -2px rgb(21 18 14 / 0.45),
+      0 2px 4px -1px rgb(21 18 14 / 0.3);
+  }
+  .fx-press:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 0 0 0 #6b5010,
+      0 2px 5px -2px rgb(21 18 14 / 0.4),
+      0 1px 2px -1px rgb(21 18 14 / 0.25);
+  }
+
+  /* Brand-native: one hard edge, no blur. A rule, not a shadow. */
+  .bx-press {
+    box-shadow: 0 4px 0 0 var(--color-gold-deep);
+  }
+  .bx-press:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 0 var(--color-gold-deep);
+  }
+
+  /* An outlined control gets its depth from the border colour instead. */
+  .btn-outline.bx-press {
+    box-shadow: 0 4px 0 0 var(--color-edge);
+  }
+  .btn-outline.bx-press:active {
+    box-shadow: 0 0 0 0 var(--color-edge);
+  }
+
+  /* -------------------------------------------------------------------------
+     2 — THE HOLOGRAPHIC SHIMMER
+     Mechanic: an angled translucent band travelling across the face on a loop.
+
+     RULE TOUCHED: p.2 "never a gradient and never a texture", and the gold
+     button is already the one gold element in its view.
+
+     This is the one that cannot be fully reconciled — a shimmer IS a moving
+     gradient. `.bx-shimmer` keeps it honest instead of pretty: a single slow
+     pass of page-ground white at low alpha, long rest between passes, no
+     rainbow and no saturation shift. It reads as light crossing brushed
+     steel rather than as a holographic foil.
+
+     Not applied anywhere by default. It is here to be looked at and chosen.
+     ------------------------------------------------------------------------- */
+
+  .fx-shimmer,
+  .bx-shimmer {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .fx-shimmer::after,
+  .bx-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    translate: -130% 0;
+  }
+
+  /* Literal: bright, saturated, fast cycle. */
+  .fx-shimmer::after {
+    background: linear-gradient(
+      105deg,
+      transparent 38%,
+      rgb(255 255 255 / 0.15) 46%,
+      rgb(255 255 255 / 0.62) 50%,
+      rgb(255 255 255 / 0.15) 54%,
+      transparent 62%
+    );
+    animation: sh-sweep 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  /* Brand-native: one quiet pass, long rest, page ground rather than pure white. */
+  .bx-shimmer::after {
+    background: linear-gradient(
+      105deg,
+      transparent 42%,
+      rgb(250 248 243 / 0.26) 50%,
+      transparent 58%
+    );
+    animation: sh-sweep 7s cubic-bezier(0.33, 0, 0.2, 1) infinite;
+  }
+
+  @keyframes sh-sweep {
+    0%,
+    62% {
+      translate: -130% 0;
+    }
+    100% {
+      translate: 130% 0;
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+     3 — THE GLASSMORPHIC FROSTED PILL
+     Mechanic: backdrop-filter blur plus a translucent outline, picking up
+     whatever colour sits behind the control.
+
+     RULE TOUCHED: p.5 "no rounded container" — the pill shape, specifically.
+     The blur itself is arguable: it is ambient rather than ornamental, and it
+     adds no colour of its own.
+
+     .bx-frost keeps the frost and drops the pill. Square corners, hairline
+     outline at the brand's own alpha. It only means anything over a
+     photograph, so its one real home is the hero's secondary control.
+
+     A backdrop-filter guarantees nothing about contrast, because it inherits
+     whatever is behind it. The hero's 72% firebox scrim is what makes this
+     safe — it caps the ground — and the audit checks the worst case.
+     ------------------------------------------------------------------------- */
+
+  /*
+    These are written as compound selectors on purpose. `.btn-outline` and
+    `.btn-gold` live in global.css, which is imported AFTER this file, so at
+    equal specificity they win on source order — and `.btn-outline` sets both
+    `background-color: transparent` and an `--color-edge` border, which would
+    strip the frost down to a bare blur with the wrong outline. Two classes
+    beat one, whatever the order.
+  */
+  .btn-outline.fx-frost,
+  .btn-gold.fx-frost,
+  .btn-outline.bx-frost,
+  .btn-gold.bx-frost {
+    -webkit-backdrop-filter: blur(14px) saturate(130%);
+    backdrop-filter: blur(14px) saturate(130%);
+    background-color: rgb(250 248 243 / 0.1);
+    color: var(--color-surface-100);
+  }
+
+  /* Literal: pill. */
+  .btn-outline.fx-frost,
+  .btn-gold.fx-frost {
+    border: 1px solid rgb(255 255 255 / 0.45);
+    border-radius: 999px;
+  }
+  .btn-outline.fx-frost:hover,
+  .btn-gold.fx-frost:hover {
+    background-color: rgb(250 248 243 / 0.18);
+  }
+
+  /* Brand-native: square, hairline. */
+  .btn-outline.bx-frost,
+  .btn-gold.bx-frost {
+    border: 1px solid rgb(250 248 243 / 0.38);
+    border-radius: 0;
+  }
+  .btn-outline.bx-frost:hover,
+  .btn-gold.bx-frost:hover {
+    background-color: rgb(250 248 243 / 0.2);
+    border-color: rgb(250 248 243 / 0.6);
+  }
+
+  /* No backdrop-filter support: fall back to a flat tint that still clears AA
+     against the scrim rather than leaving a barely-visible control. */
+  @supports not (backdrop-filter: blur(1px)) {
+    .btn-outline.fx-frost,
+    .btn-gold.fx-frost,
+    .btn-outline.bx-frost,
+    .btn-gold.bx-frost {
+      background-color: rgb(26 23 19 / 0.55);
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+     4 — DYNAMIC MICRO-INTERACTION (LIQUID FILL)
+     Mechanic: a mask scaling out from where the cursor entered, swapping the
+     label colour as it passes.
+
+     RULE TOUCHED: none. This is the one that is brand-native as specified —
+     no shadow, no gradient, no rounded container, no new colour. It is a
+     colour transition with a direction.
+
+     Both ends are measured: ink on crown gold is 5.52:1 before the fill,
+     surface-100 on ink is 17.59:1 after it. The label never passes through
+     white-on-gold, which is the palette's one forbidden pairing at 3.38:1.
+
+     Built with no markup change. The face is ::after at z-index -2 and the
+     fill is ::before at -1, so the label sits on top as an ordinary text node
+     and every existing `.btn-gold` in the codebase inherits this for free.
+
+     --fx/--fy come from a 12-line enhancement in Base.astro. Without it they
+     stay at their declared 50%/100% and the fill rises from the bottom edge,
+     which is a perfectly good effect on its own.
+     ------------------------------------------------------------------------- */
+
+  .fx-liquid,
+  .bx-liquid {
+    --fx: 50%;
+    --fy: 100%;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background-color: transparent;
+    transition: color 220ms ease 60ms;
+  }
+
+  .fx-liquid::after,
+  .bx-liquid::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background-color: var(--color-crown-gold);
+  }
+
+  .fx-liquid::before,
+  .bx-liquid::before {
+    content: '';
+    position: absolute;
+    top: var(--fy);
+    left: var(--fx);
+    width: 260%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    /* The reveal SHAPE is a circle. The control is still square — this is not
+       a rounded container, it is the edge of a wipe. */
+    border-radius: 50%;
+    background-color: var(--color-ink);
+    scale: 0;
+    z-index: -1;
+    transition: scale 520ms cubic-bezier(0.22, 0.7, 0.25, 1);
+  }
+
+  .fx-liquid:hover::before,
+  .fx-liquid:focus-visible::before,
+  .bx-liquid:hover::before,
+  .bx-liquid:focus-visible::before {
+    scale: 1;
+  }
+
+  .fx-liquid:hover,
+  .fx-liquid:focus-visible,
+  .bx-liquid:hover,
+  .bx-liquid:focus-visible {
+    color: var(--color-surface-100);
+  }
+
+  /* The literal version is faster and eases harder. */
+  .fx-liquid::before {
+    transition: scale 380ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* An outlined control fills with ink from transparent instead of from gold. */
+  .btn-outline.bx-liquid::after {
+    background-color: transparent;
+  }
+
+  /* -------------------------------------------------------------------------
+     Reduced motion.
+     Every effect above is decoration over a control that already works. Under
+     prefers-reduced-motion the shimmer stops entirely and the fill becomes an
+     instant state change — the colours still carry the affordance.
+     ------------------------------------------------------------------------- */
+
+  @media (prefers-reduced-motion: reduce) {
+    .fx-shimmer::after,
+    .bx-shimmer::after {
+      animation: none;
+      opacity: 0;
+    }
+
+    .fx-liquid::before,
+    .bx-liquid::before {
+      transition: none;
+    }
+
+    .fx-press,
+    .bx-press {
+      transition: none;
+    }
+  }
+}

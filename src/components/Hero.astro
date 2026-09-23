@@ -98,12 +98,25 @@ if (headline.length > 38) {
         (ctaHref || secondaryHref) && (
           <div class="mt-10 flex flex-wrap items-center gap-4">
             {ctaHref && ctaLabel && (
-              <a href={ctaHref} class="btn-gold">
+              <a href={ctaHref} class="btn-gold bx-press bx-liquid">
                 {ctaLabel}
               </a>
             )}
+            {/*
+              The frost only means something where there is a photograph to
+              pick up, so it is applied over a plate and the flat reversed
+              outline is used on a plain firebox band. Square, not a pill —
+              p.5 bans rounded containers, and the blur is the part worth
+              having anyway.
+            */}
             {secondaryHref && secondaryLabel && (
-              <a href={secondaryHref} class="btn-outline btn-outline-reversed">
+              <a
+                href={secondaryHref}
+                class:list={[
+                  'btn-outline',
+                  photo ? 'bx-frost bx-press' : 'btn-outline-reversed bx-press',
+                ]}
+              >
                 {secondaryLabel}
               </a>
             )}

@@ -185,6 +185,50 @@ guards it.
 
 ---
 
+## Button effects, and the rules they suspend
+
+`src/styles/effects.css` carries four modern treatments, each in two forms:
+`.fx-*` implements the trend literally, `.bx-*` keeps the mechanic and drops
+what the kit forbids. `/lab/buttons` shows all eight side by side (internal,
+noindex, nothing links to it).
+
+| Effect | Rule at stake | What the brand-native form does | Live? |
+|---|---|---|---|
+| **Tactile press** | p.2 ruled-not-shadowed · p.5 no drop shadow | Depth layer becomes a **hard offset with zero blur** — a rule, not a shadow — in gold-deep under a gold face. Reads as letterpress. Mechanic fully intact. | Yes, every gold CTA |
+| **Liquid fill** | None | Nothing to reconcile: no shadow, no gradient, no rounded container, no new colour. A colour transition with a direction. | Yes, every gold CTA |
+| **Glassmorphic frost** | p.5 no rounded container | Keeps the blur, **drops the pill**. Square corners, hairline at brand alpha. | Yes, hero secondary control over a photograph |
+| **Holographic shimmer** | p.2 *never a gradient and never a texture* | **Cannot be reconciled** — a shimmer is a moving gradient. The native form is quieter, not compliant. | **No.** One-line opt-in |
+
+Three notes that matter:
+
+- **The shimmer is the real decision.** Adopting it means consciously
+  suspending "never a gradient", which is one of the five rules the kit's own
+  README calls out as mattering most. It is built and available; it is not on.
+- **Contrast is measured at both ends of every transition.** The liquid fill
+  goes ink-on-gold (5.52:1) → surface-100-on-ink (17.59:1) and never passes
+  through white-on-gold, the palette's one forbidden pairing at 3.38:1. The
+  frost is only safe because the hero's 72% scrim caps the ground behind it;
+  the audit checks the worst case at 5.23:1.
+- **Everything degrades.** Under `prefers-reduced-motion` the shimmer stops and
+  the fill becomes an instant state change. Without JavaScript the fill rises
+  from the bottom edge instead of the cursor. Without `backdrop-filter` the
+  frost falls back to a flat tint that still clears AA.
+
+### Two cascade traps already hit
+
+Both cost real debugging time. Both are now checked by `npm run audit`.
+
+1. **Unlayered rules beat layered ones**, whatever the specificity. A bare
+   `.btn-gold { display: inline-block }` outside `@layer components` defeated
+   `hidden` and `sm:inline-block`, and the mobile header rendered the quote
+   button twice.
+2. **`effects.css` is imported before the component definitions**, so at equal
+   specificity `.btn-outline` wins on source order. `.bx-frost` alone degraded
+   to a bare blur with the wrong outline. The frost rules are written compound
+   (`.btn-outline.bx-frost`) so two classes beat one regardless of order.
+
+---
+
 ## Where the Versa figures come from
 
 The Versa line is built to the sizing ladder of the **Stoveman series**

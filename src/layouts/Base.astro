@@ -9,9 +9,16 @@ interface Props {
   description?: string;
   /** Current path, for the 2px gold underline on active nav. */
   path?: string;
+  /** Internal pages that should not be indexed or shown in nav. */
+  noindex?: boolean;
 }
 
-const { title, description = SITE.description, path = Astro.url.pathname } = Astro.props;
+const {
+  title,
+  description = SITE.description,
+  path = Astro.url.pathname,
+  noindex = false,
+} = Astro.props;
 const fullTitle = title === SITE.name ? SITE.name : `${title} — ${SITE.name}`;
 ---
 
@@ -22,6 +29,7 @@ const fullTitle = title === SITE.name ? SITE.name : `${title} — ${SITE.name}`;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     {/* The mark alone — it is the only part that survives a round crop. */}
     <link rel="icon" href="/brand/stovehaus-mark-gold.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/brand/stovehaus-mark-gold.png" />
@@ -47,5 +55,29 @@ const fullTitle = title === SITE.name ? SITE.name : `${title} — ${SITE.name}`;
       <slot />
     </main>
     <Footer />
+
+    {/*
+      Liquid-fill entry point. The reveal is meant to grow from where the
+      cursor crossed the edge, and CSS alone cannot know that — :hover carries
+      no coordinates. Twelve lines of enhancement: without them --fx/--fy keep
+      their declared 50%/100% and the fill rises from the bottom edge, which
+      is a good effect in its own right. Nothing here is required for a button
+      to work, so it is deferred and never blocks paint.
+    */}
+    <script>
+      document.addEventListener(
+        'pointerenter',
+        (event) => {
+          const target = event.target as HTMLElement | null;
+          const button = target?.closest?.('.bx-liquid, .fx-liquid') as HTMLElement | null;
+          if (!button) return;
+          const box = button.getBoundingClientRect();
+          button.style.setProperty('--fx', `${event.clientX - box.left}px`);
+          button.style.setProperty('--fy', `${event.clientY - box.top}px`);
+        },
+        // Capture, because pointerenter does not bubble.
+        true
+      );
+    </script>
   </body>
 </html>

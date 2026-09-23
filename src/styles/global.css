@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './effects.css';
 
 /* ---------------------------------------------------------------------------
    STOVEHAUS — brand token layer
@@ -275,7 +276,9 @@
     transition: background-color 120ms linear;
   }
 
-  .btn-gold:hover {
+  /* Hover is handled by the liquid fill in effects.css, which every .btn-gold
+     carries. This is the no-JS, no-effects fallback only. */
+  .btn-gold:not(.bx-liquid):not(.fx-liquid):hover {
     background-color: var(--color-gold-deep);
     border-color: var(--color-gold-deep);
     color: var(--color-surface-100);

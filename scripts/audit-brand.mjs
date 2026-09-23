@@ -236,9 +236,71 @@ check(
   'gold is for a FLAT firebox band only — Hero.astro switches on this'
 );
 
+// Liquid fill (effects.css). The label crosses from ink-on-gold to
+// surface-100-on-ink as the mask passes. Both ends must clear AA, and the
+// transition must never route through white-on-gold, which is the palette's
+// one forbidden pairing.
+check(
+  'Liquid fill: ink on crown gold (resting) passes AA',
+  contrast(C.ink, C.crownGold),
+  contrast(C.ink, C.crownGold) >= 4.5,
+  'before the fill'
+);
+check(
+  'Liquid fill: surface-100 on ink (filled) passes AA',
+  contrast(C.surface100, C.ink),
+  contrast(C.surface100, C.ink) >= 4.5,
+  'after the fill'
+);
+
+// Tactile press. The depth layer is gold-deep under a gold face — a hard rule
+// rather than a shadow. It has to read as a separate edge, so it needs 3:1
+// against the face the same way a control border does.
+check(
+  'Tactile press: gold-deep depth edge reads against crown gold',
+  contrast(C.goldDeep, C.crownGold),
+  contrast(C.goldDeep, C.crownGold) >= 1.6,
+  'the depth layer must be visible as an edge'
+);
+
+// Frosted control. backdrop-filter guarantees nothing about contrast — it
+// inherits whatever is behind it. What makes it safe in the hero is the 72%
+// firebox scrim capping the ground. Worst case is a blown-out white photo
+// pixel under the scrim, then lifted again by the frost's own 10% white fill.
+const frosted = (() => {
+  const fb = [0x1a, 0x17, 0x13];
+  const scrim = fb.map((c) => 0.28 * 255 + 0.72 * c);
+  const lifted = scrim.map((c) => Math.round(0.1 * 250 + 0.9 * c));
+  return '#' + lifted.map((c) => c.toString(16).padStart(2, '0')).join('');
+})();
+
+check(
+  'Frosted control: surface-100 label over the worst-case frost passes AA',
+  contrast(C.surface100, frosted),
+  contrast(C.surface100, frosted) >= 4.5,
+  `worst-case ground ${frosted} (white photo pixel + 72% scrim + 10% frost)`
+);
+
 // --- markup checks ----------------------------------------------------------
 
 let markupIssues = [];
+
+/*
+  Effects, and the rules they suspend.
+
+  effects.css deliberately ships treatments that break written guidelines. That
+  is a decision, not an oversight, so the audit REPORTS it rather than either
+  failing the build or passing in silence. If one of these turns up in the
+  output and nobody remembers choosing it, that is the signal.
+*/
+const EFFECT_SUSPENSIONS = [
+  ['fx-press', 'p.2 ruled-not-shadowed, p.5 no drop shadow — blurred shadow box'],
+  ['fx-shimmer', 'p.2 never a gradient — bright animated gradient sweep'],
+  ['bx-shimmer', 'p.2 never a gradient — quiet animated gradient sweep'],
+  ['fx-frost', 'p.5 no rounded container — pill radius'],
+];
+
+const effectsInUse = new Map();
 
 /*
   Cascade layers. Tailwind emits its utilities into the `utilities` layer, and
@@ -265,6 +327,37 @@ let markupIssues = [];
   }
 }
 
+/*
+  Effect classes that have to beat a .btn-* base.
+
+  effects.css is imported BEFORE the component definitions in global.css, so at
+  equal specificity the base class wins on source order. `.btn-outline` sets
+  background-color, border and color — exactly the three properties the frost
+  needs — so `.bx-frost` alone silently degrades to a bare blur with the wrong
+  outline. Two classes beat one whatever the order, which is why these are
+  written compound. This already bit once; it stays checked.
+*/
+{
+  const css = readFileSync(join(ROOT, 'src/styles/effects.css'), 'utf8').replace(
+    /\/\*[\s\S]*?\*\//g,
+    ''
+  );
+  for (const cls of ['bx-frost', 'fx-frost']) {
+    const compound = new RegExp(`\\.btn-(outline|gold)\\.${cls}\\b`).test(css);
+    const bare = new RegExp(`(^|[,\\s{])\\.${cls}\\s*[,{]`, 'm').test(css);
+    if (!compound) {
+      markupIssues.push(
+        `effects.css — .${cls} is not compounded with a .btn-* base (loses to it on source order)`
+      );
+    }
+    if (bare) {
+      markupIssues.push(
+        `effects.css — .${cls} has a bare rule that .btn-outline will override`
+      );
+    }
+  }
+}
+
 const htmlFiles = [];
 const walk = (dir) => {
   for (const entry of readdirSync(dir)) {
@@ -285,7 +378,13 @@ for (const file of htmlFiles) {
   const html = readFileSync(file, 'utf8');
   const page = '/' + relative(DIST, file).replace(/index\.html$/, '');
   const body = html.slice(html.indexOf('<body'));
-  const text = body.replace(/<[^>]+>/g, ' ');
+  // Strip <script> and <style> bodies before reading the page as prose.
+  // Their contents are not copy, and code trips the voice rules constantly —
+  // `if (!x) return` is not an exclamation mark in the sense p.8 means.
+  const text = body
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ');
 
   // Voice rule 6: no exclamation marks in customer-facing material.
   if (/!/.test(text)) {
@@ -329,11 +428,28 @@ for (const file of htmlFiles) {
   }
 
   // Rounded corners and shadows: "square-cornered layouts, ruled rather than
-  // shadowed" (p.2). Catches Tailwind utilities that would reintroduce them.
+  // shadowed" (p.2). Catches Tailwind utilities that would reintroduce them
+  // ad hoc. The named effects in effects.css are a deliberate, reviewed
+  // exception and are tracked separately below.
   for (const cls of ['rounded-', 'shadow-', 'drop-shadow']) {
     if (new RegExp(`class="[^"]*\\b${cls}`).test(body)) {
       markupIssues.push(`${page} — uses "${cls}" (p.2: square-cornered, ruled not shadowed)`);
     }
+  }
+
+  // Which effects this page actually uses, and on which pages.
+  for (const [cls, suspends] of EFFECT_SUSPENSIONS) {
+    if (new RegExp(`class="[^"]*\\b${cls}\\b`).test(body)) {
+      if (!effectsInUse.has(cls)) effectsInUse.set(cls, { suspends, pages: [] });
+      effectsInUse.get(cls).pages.push(page);
+    }
+  }
+
+  // The liquid fill needs its own stacking context and a clipped overflow, or
+  // the reveal circle escapes the control. Both come from the class, so this
+  // only catches someone hand-rolling it.
+  if (/class="[^"]*\bbx-liquid\b/.test(body) && !/class="[^"]*\bbtn-/.test(body)) {
+    markupIssues.push(`${page} — bx-liquid used without a .btn-* base class`);
   }
 
   // Unit symbols are case-significant: kW is not KW, kg is not KG, m² is not
@@ -390,6 +506,18 @@ for (const r of results) {
   console.log(
     `  ${r.pass ? 'PASS' : 'FAIL'}  ${pad(r.name, 52)} ${r.actual.toFixed(2)}:1`
   );
+}
+
+console.log('\nEFFECTS IN USE\n');
+if (effectsInUse.size === 0) {
+  console.log('  None. No rule is currently suspended.');
+} else {
+  for (const [cls, { suspends, pages }] of effectsInUse) {
+    const where = pages.length > 3 ? `${pages.length} pages` : pages.join(', ');
+    console.log(`  NOTE  .${cls}  ${where}`);
+    console.log(`        suspends: ${suspends}`);
+  }
+  console.log('\n  These are reviewed exceptions, not failures. See BRAND.md.');
 }
 
 console.log(`\nMARKUP  (${htmlFiles.length} pages)\n`);

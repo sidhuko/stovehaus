@@ -61,11 +61,14 @@ src/
   data/site.ts         nav, contact, the four messages, certification status
   data/images.ts       photography imports, so Astro can optimise them
   styles/global.css    brand tokens, @font-face, type scale, components
+  styles/effects.css   button treatments — .fx-* literal, .bx-* brand-native
   components/          Header · Footer · Hero · ProductCard · SpecTable ·
                        LineChip · LinePage · AudienceFork · MessageBlock ·
                        ProvisionalNote
   pages/               one file per route; sauna/[slug].astro builds a page
                        per Versa model from products.ts
+  pages/lab/buttons    internal, noindex: the four button effects side by side
+                       with the brand rule each one touches
 public/
   brand/               the nine logo SVGs, copied from the kit — never rebuilt
   fonts/               Afacad, Spectral, IBM Plex Mono as woff2, self-hosted
