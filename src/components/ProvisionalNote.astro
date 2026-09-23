@@ -1,0 +1,38 @@
+---
+interface Props {
+  /** 'inline' for a one-line marker, 'panel' for the full explanation. */
+  variant?: 'inline' | 'panel';
+}
+const { variant = 'inline' } = Astro.props;
+
+/*
+  The Versa figures are the sizing ladder's design targets, not Stovehaus
+  measurements. The guidelines are blunt about this — replace placeholders with
+  tested specifications before anything is published or sent to a customer — so
+  where we cannot yet do that, we say which kind of number a reader is looking
+  at rather than letting it pass as measured.
+
+  Steel, not ember: this is a status, not a figure, and the line colours are a
+  code that stops working the moment they are spent on something else.
+*/
+---
+
+{
+  variant === 'inline' ? (
+    <p class="spec text-steel">Provisional — design target, not yet tested</p>
+  ) : (
+    <div class="border border-hairline bg-surface-200 p-8">
+      <p class="eyebrow text-steel">About these figures</p>
+      <p class="body-copy mt-3 text-ink">
+        Every figure on this page is a design target, not a measurement. It is what the stove is
+        being built to, not what we have put on a meter.
+      </p>
+      <p class="body-copy mt-4 text-ink-muted">
+        We publish a tested number once we have fired the stove and written it down. Until then
+        the target is what we have, and we would rather tell you which one you are reading.
+        Clearances to combustibles are not on this page at all — an installer quotes a job off
+        them, and they belong to a tested appliance.
+      </p>
+    </div>
+  )
+}

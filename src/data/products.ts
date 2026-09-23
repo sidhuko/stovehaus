@@ -3,27 +3,59 @@
  *
  * READ THIS BEFORE ADDING ANYTHING.
  *
- * The brand guidelines PDF states, verbatim: "Model names, kW figures,
- * dimensions, prices and certification status shown in the guidelines PDF are
- * PLACEHOLDERS demonstrating layout. Replace them with tested specifications
- * before anything is published or sent to a customer."
+ * ── Where the Versa figures come from ─────────────────────────────────────
  *
- * So: exactly one product in this file carries real figures — the Versa 13,
- * taken from the 0002 event stand. Every other slot is `status: 'pending'` and
- * renders as a visibly empty card. Nothing here is invented. If you do not have
- * a tested figure, leave the slot pending rather than filling it in.
+ * The Versa line is built to the sizing ladder of the Stoveman series
+ * (Stoveman OÜ, Estonia): 13 / 16 / 20, each also offered with an extended
+ * firebox. The kW ratings, room volumes and stone capacities below are that
+ * ladder's published figures, used here as DESIGN TARGETS for what Stovehaus
+ * is building — they are not Stovehaus measurements.
+ *
+ * That distinction is not pedantry. It has three consequences the site honours:
+ *
+ *   1. Every Versa figure carries `basis: 'target'` and renders with a
+ *      provisional marker. A figure becomes `'tested'` only once Stovehaus has
+ *      measured its own stove.
+ *   2. Stoveman's CE / EN 15821:2010 certification belongs to Stoveman's
+ *      tested appliance from Stoveman's factory. It does NOT transfer to a
+ *      Stovehaus-built stove. Nothing on this site cites it.
+ *   3. Clearances to combustibles are deliberately absent. They are specific
+ *      to a tested appliance, an installer quotes a job off them, and getting
+ *      them wrong on a wood-burning stove is a fire risk. We publish ours when
+ *      we have tested ours.
+ *
+ * The 0002 event stand already published Versa 13 as 15.4 kW / 6–13 / 110 kg,
+ * which is the Stoveman 13's rating exactly. It printed the room capacity as
+ * m² — that was a typo. The rating is room VOLUME in m³, which is the sauna
+ * industry convention and what the source figure is.
+ *
+ * ── The rule for anything you add ─────────────────────────────────────────
+ *
+ * The brand guidelines state that every model name, kW figure, dimension and
+ * price in the PDF is a placeholder, to be replaced with tested specifications
+ * before anything is published or sent to a customer. So: if you do not have a
+ * tested figure, leave it out or mark it `target`. Never invent one.
  */
 
 export type LineId = 'sauna' | 'jacuzzi' | 'firepits';
 
+/** How a line is sold, which decides what its page shows instead of a grid. */
+export type LineStatus =
+  /** Models you can order off the page. */
+  | 'available'
+  /** Announced, not yet orderable. No model slots — saying "soon" is enough. */
+  | 'coming-soon'
+  /** No catalogue. Every one is built to the job. */
+  | 'made-to-order';
+
 export interface ProductLine {
   id: LineId;
-  /** Nav and page title. */
   name: string;
   /** Uppercase chip on the card — guidelines p.10 card anatomy. */
   chip: string;
   /** Colour token for this line's code. Ember = fire, spring = water, dusk = gas. */
   token: 'ember' | 'spring' | 'dusk';
+  status: LineStatus;
   /** What the category is actually bought on. */
   boughtOn: string;
   eyebrow: string;
@@ -42,6 +74,7 @@ export const LINES: ProductLine[] = [
     name: 'Sauna',
     chip: 'Sauna',
     token: 'ember',
+    status: 'available',
     boughtOn: 'Power rating',
     eyebrow: 'Wood-fired · Sauna heaters',
     headline: 'Heaters that take a beating.',
@@ -58,10 +91,11 @@ export const LINES: ProductLine[] = [
     name: 'Jacuzzi',
     chip: 'Jacuzzi',
     token: 'spring',
+    status: 'coming-soon',
     boughtOn: 'Tub capacity',
     eyebrow: 'Wood-fired · Jacuzzi heaters',
     headline: 'Hot water, no power run.',
-    lede: 'A submerged or external coil that brings a tub up on wood alone, with no pump and no electrical service to the pad.',
+    lede: 'A coil that brings a tub up on wood alone — no pump, no element, no electrical service to the pad.',
     image: 'jacuzzi-wood-fired.jpg',
     imageAlt:
       'A cedar wood-fired hot tub in bare spring woodland, smoke rising from its flue, split logs stacked alongside.',
@@ -71,77 +105,216 @@ export const LINES: ProductLine[] = [
     name: 'Firepits',
     chip: 'Firepit',
     token: 'dusk',
+    status: 'made-to-order',
     boughtOn: 'Burner output',
     eyebrow: 'Gas · Fire pits',
     headline: 'A fire you can turn off.',
-    lede: 'Linear gas burners in welded steel, for terraces and dining tables where a wood fire is not practical.',
-    // No photograph at source resolution. See BRAND.md open items.
+    lede: 'Linear gas burners in welded steel, cut to the table or terrace they are going into.',
+    // A linear burner firing straight off the media bed behind a glass wind
+    // guard — no logs, no ash. It shows the category, not a Stovehaus unit.
+    image: 'firepit-linear-burner.jpg',
+    imageAlt:
+      'A linear gas fire pit burning across a bed of stone media, behind a glass wind guard on a terrace.',
+    imagePosition: 'center 60%',
   },
 ];
 
 export type SpecRow = { label: string; value: string };
 
+/**
+ * Whether a figure has been measured by Stovehaus or is still the ladder's
+ * design target. Everything is `target` until someone fires a stove and
+ * writes the number down.
+ */
+export type FigureBasis = 'tested' | 'target';
+
 export interface Product {
   slug: string;
   line: LineId;
   status: 'published' | 'pending';
-  /** Family name. Absent on pending slots — an unnamed slot cannot be mistaken for a model. */
+  basis: FigureBasis;
   name?: string;
-  /** SH-[line]-[output]-[finish]. Open on Versa 13 — see BRAND.md open items. */
+  /** SH-[line]-[output]-[finish]. Open on the Versa line — see BRAND.md. */
   modelCode?: string;
   /** The one figure the category is bought on — the card's hero number. */
   headlineFigure?: { value: string; unit: string; label: string };
   /** Two or three rows on the card; the full set on the product page. */
   specs?: SpecRow[];
+  /** Figures we hold no source for at all. Named, not silently omitted. */
+  unknownSpecs?: string[];
   leadTime?: string;
   blurb?: string;
+  /** Set on the extended-firebox models. */
+  variantNote?: string;
 }
 
+/*
+  The ladder. Power, room volume and stone capacity are the Stoveman series
+  targets; dimensions and weight are that series' figures too and will move once
+  Stovehaus builds to its own drawings.
+
+  The LS models take an extended firebox so the stove is fed from the room next
+  door — a different install, not a different heater, so they carry the same
+  ratings and their own depth is still open.
+*/
+const UNKNOWN_ON_EVERY_MODEL = [
+  'Clearance to combustibles',
+  'Heat-up time',
+  'HS code',
+];
+
 export const PRODUCTS: Product[] = [
-  // ---------------------------------------------------------------------------
-  // The only real product on the site. Figures transcribed from the 0002 event
-  // stand: 15.4 kW power rating, 6–13 m² room capacity, 110 kg heater stones.
-  //
-  // TODO(specs): room capacity is printed as m² on the stand. The guidelines set
-  // room volume in m³ throughout, which is the sauna industry convention.
-  // Rendered here as printed. If it should be m³ this is a one-line fix.
-  //
-  // TODO(naming): no model code assigned. The guidelines propose
-  // SH-[line]-[output]-[finish] and warn that mixed naming makes a small line
-  // look improvised. "Versa 13" is a third convention and its 13 reads as
-  // capacity, not output.
-  //
-  // TODO(specs): plate thickness, flue diameter, clearances, weight, heat-up
-  // time and HS code are all unknown. They are omitted rather than guessed —
-  // an installer needs the flue spec and the clearances to quote a job.
-  // ---------------------------------------------------------------------------
   {
     slug: 'versa-13',
     line: 'sauna',
     status: 'published',
+    basis: 'target',
     name: 'Versa 13',
     headlineFigure: { value: '15.4', unit: 'kW', label: 'Power rating' },
     specs: [
-      { label: 'Room capacity', value: '6–13 m² (65–140 ft²)' },
-      { label: 'Heater stones', value: '110 kg (243 lb)' },
+      { label: 'Room volume', value: '6–13 m³ (212–459 ft³)' },
+      { label: 'Heater stones', value: '90–110 kg (198–243 lb)' },
       { label: 'Power rating', value: '15.4 kW' },
+      { label: 'Firebox plate', value: '5 mm' },
+      { label: 'Flue diameter', value: 'Ø 115 mm (Ø 4.5 in)' },
+      { label: 'Dimensions, W × D × H', value: '45 × 52.5 × 70 cm' },
+      { label: 'Weight, without stones', value: '52 kg (115 lb)' },
     ],
+    unknownSpecs: UNKNOWN_ON_EVERY_MODEL,
     leadTime: 'Lead time on request',
     blurb:
-      'The Versa 13 holds 110 kg of stone, which is what lets it keep giving löyly after the third and fourth ladle instead of going flat. It is sized for a room of 6 to 13 m².',
+      'The smallest of the three, and the one most cabins want. It carries up to 110 kg of stone, which is what lets it keep giving löyly after the third and fourth ladle instead of going flat. Sized for a room of 6 to 13 m³.',
   },
+  {
+    slug: 'versa-13-ls',
+    line: 'sauna',
+    status: 'published',
+    basis: 'target',
+    name: 'Versa 13 LS',
+    headlineFigure: { value: '15.4', unit: 'kW', label: 'Power rating' },
+    specs: [
+      { label: 'Room volume', value: '6–13 m³ (212–459 ft³)' },
+      { label: 'Heater stones', value: '90–110 kg (198–243 lb)' },
+      { label: 'Power rating', value: '15.4 kW' },
+      { label: 'Firebox plate', value: '5 mm' },
+      { label: 'Flue diameter', value: 'Ø 115 mm (Ø 4.5 in)' },
+      { label: 'Firebox', value: 'Extended, through-wall' },
+      { label: 'Weight, without stones', value: '63 kg (139 lb)' },
+    ],
+    unknownSpecs: [...UNKNOWN_ON_EVERY_MODEL, 'Dimensions, W × D × H'],
+    leadTime: 'Lead time on request',
+    variantNote: 'Extended firebox — fed from the room next door.',
+    blurb:
+      'The Versa 13 with an extended firebox, so the stove is loaded from the changing room rather than the hot room. Same ratings, different install: the wall penetration has to be detailed before the stove is built.',
+  },
+  {
+    slug: 'versa-16',
+    line: 'sauna',
+    status: 'published',
+    basis: 'target',
+    name: 'Versa 16',
+    headlineFigure: { value: '17', unit: 'kW', label: 'Power rating' },
+    specs: [
+      { label: 'Room volume', value: '8–16 m³ (283–565 ft³)' },
+      { label: 'Heater stones', value: '140 kg (309 lb)' },
+      { label: 'Power rating', value: '17 kW' },
+      { label: 'Firebox plate', value: '5 mm' },
+      { label: 'Flue diameter', value: 'Ø 115 mm (Ø 4.5 in)' },
+      { label: 'Dimensions, W × D × H', value: '50 × 65 × 70 cm' },
+      { label: 'Weight, without stones', value: '70 kg (154 lb)' },
+    ],
+    unknownSpecs: UNKNOWN_ON_EVERY_MODEL,
+    leadTime: 'Lead time on request',
+    blurb:
+      'The middle of the ladder. 140 kg of stone against 17 kW, for a room of 8 to 16 m³ — the size most commercial rooms and larger cabin builds land on.',
+  },
+  {
+    slug: 'versa-16-ls',
+    line: 'sauna',
+    status: 'published',
+    basis: 'target',
+    name: 'Versa 16 LS',
+    headlineFigure: { value: '17', unit: 'kW', label: 'Power rating' },
+    specs: [
+      { label: 'Room volume', value: '8–16 m³ (283–565 ft³)' },
+      { label: 'Heater stones', value: '140 kg (309 lb)' },
+      { label: 'Power rating', value: '17 kW' },
+      { label: 'Firebox plate', value: '5 mm' },
+      { label: 'Flue diameter', value: 'Ø 115 mm (Ø 4.5 in)' },
+      { label: 'Firebox', value: 'Extended, through-wall' },
+    ],
+    unknownSpecs: [...UNKNOWN_ON_EVERY_MODEL, 'Dimensions, W × D × H', 'Weight'],
+    leadTime: 'Lead time on request',
+    variantNote: 'Extended firebox — fed from the room next door.',
+    blurb:
+      'The Versa 16 fed from outside the hot room. The usual choice for a commercial install, where nobody wants an attendant carrying wood past the benches.',
+  },
+  {
+    slug: 'versa-20',
+    line: 'sauna',
+    status: 'published',
+    basis: 'target',
+    name: 'Versa 20',
+    headlineFigure: { value: '20', unit: 'kW', label: 'Power rating' },
+    specs: [
+      { label: 'Room volume', value: '12–20 m³ (424–706 ft³)' },
+      { label: 'Heater stones', value: '160 kg (353 lb)' },
+      { label: 'Power rating', value: '20 kW' },
+      { label: 'Firebox plate', value: '5 mm' },
+      { label: 'Flue diameter', value: 'Ø 115 mm (Ø 4.5 in)' },
+      { label: 'Dimensions, W × D × H', value: '51 × 65.5 × 84 cm' },
+      { label: 'Weight, without stones', value: '76 kg (168 lb)' },
+    ],
+    unknownSpecs: UNKNOWN_ON_EVERY_MODEL,
+    leadTime: 'Lead time on request',
+    blurb:
+      'The top of the ladder: 160 kg of stone and 20 kW, for rooms of 12 to 20 m³. Built for lodges and commercial rooms that get fired every day rather than every weekend.',
+  },
+  {
+    slug: 'versa-20-ls',
+    line: 'sauna',
+    status: 'published',
+    basis: 'target',
+    name: 'Versa 20 LS',
+    headlineFigure: { value: '20', unit: 'kW', label: 'Power rating' },
+    specs: [
+      { label: 'Room volume', value: '12–20 m³ (424–706 ft³)' },
+      { label: 'Heater stones', value: '160 kg (353 lb)' },
+      { label: 'Power rating', value: '20 kW' },
+      { label: 'Firebox plate', value: '5 mm' },
+      { label: 'Flue diameter', value: 'Ø 115 mm (Ø 4.5 in)' },
+      { label: 'Firebox', value: 'Extended, through-wall' },
+    ],
+    unknownSpecs: [...UNKNOWN_ON_EVERY_MODEL, 'Dimensions, W × D × H', 'Weight'],
+    leadTime: 'Lead time on request',
+    variantNote: 'Extended firebox — fed from the room next door.',
+    blurb:
+      'The largest Versa, loaded from outside the hot room. Specify the wall thickness at order — the firebox extension is cut to it.',
+  },
+];
 
-  // Empty slots. These render as empty states, never as products.
-  { slug: 'sauna-slot-2', line: 'sauna', status: 'pending' },
-  { slug: 'sauna-slot-3', line: 'sauna', status: 'pending' },
-
-  { slug: 'jacuzzi-slot-1', line: 'jacuzzi', status: 'pending' },
-  { slug: 'jacuzzi-slot-2', line: 'jacuzzi', status: 'pending' },
-  { slug: 'jacuzzi-slot-3', line: 'jacuzzi', status: 'pending' },
-
-  { slug: 'firepit-slot-1', line: 'firepits', status: 'pending' },
-  { slug: 'firepit-slot-2', line: 'firepits', status: 'pending' },
-  { slug: 'firepit-slot-3', line: 'firepits', status: 'pending' },
+/**
+ * What a fire pit is specified on. There is no catalogue: every one is cut to
+ * the table or terrace it goes into, so the page asks for these instead of
+ * offering models.
+ */
+export const FIREPIT_VARIABLES = [
+  {
+    label: 'Burner length',
+    body: 'Linear burners are cut to the opening. Give us the finished table or surround dimension and we work back from it.',
+  },
+  {
+    label: 'Output',
+    body: 'Follows the burner length. Stated in kW and BTU/h on the drawing, because a terrace in Alberta and a terrace in Texas are not asking the same question.',
+  },
+  {
+    label: 'Fuel',
+    body: 'Natural gas or propane. The orifice differs, so this is settled before anything is cut, not after.',
+  },
+  {
+    label: 'Surround and finish',
+    body: 'Drop-in pan, full table, or a plate to build into masonry. Steel finish to match the rest of the build.',
+  },
 ];
 
 export const getLine = (id: LineId): ProductLine =>
@@ -152,3 +325,6 @@ export const productsInLine = (id: LineId): Product[] =>
 
 export const publishedProducts = (): Product[] =>
   PRODUCTS.filter((p) => p.status === 'published');
+
+export const getProduct = (slug: string): Product | undefined =>
+  PRODUCTS.find((p) => p.slug === slug);

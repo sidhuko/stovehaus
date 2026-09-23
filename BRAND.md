@@ -185,6 +185,37 @@ guards it.
 
 ---
 
+## Where the Versa figures come from
+
+The Versa line is built to the sizing ladder of the **Stoveman series**
+(Stoveman OÜ, Estonia) — 13 / 16 / 20, each also offered with an extended
+firebox. Stovehaus fabricates its own stoves to that ladder.
+
+So every kW rating, room volume and stone capacity on this site is a **design
+target, not a Stovehaus measurement**, and carries `basis: 'target'` in
+`src/data/products.ts`. The site says so on every card and every product page
+via `ProvisionalNote.astro`. A figure becomes `'tested'` when someone has fired
+the stove and written the number down.
+
+Three consequences, all load-bearing:
+
+1. **Stoveman's CE / EN 15821:2010 certification does not transfer.** It belongs
+   to Stoveman's tested appliance from Stoveman's factory. Nothing on this site
+   cites it, and the certification panel says plainly that nothing is published
+   yet.
+2. **Clearances to combustibles are deliberately absent.** The source manual
+   gives them (190 mm sides, 250 mm back, 900 mm front, 1140 mm stones to
+   ceiling) but they are specific to a tested appliance, an installer quotes a
+   job off them, and getting them wrong on a wood-burning stove is a fire risk.
+   They go up when Stovehaus has tested its own.
+3. **The "made by hand, by people we can name" story is about fabrication, not
+   design.** Do not let copy imply the ratings were arrived at independently.
+
+The 0002 event stand had already published Versa 13 as 15.4 kW / 6–13 / 110 kg,
+which is the Stoveman 13's rating exactly.
+
+---
+
 ## Open items
 
 Tracked as `TODO` in `src/data/products.ts` and `src/data/site.ts`. None are
@@ -193,8 +224,17 @@ blocking, all need an answer before launch.
 | Item | Current state |
 |---|---|
 | **Phone number** | The 0001 flyer prints `625-111-3000`, the 0002 event stand prints `625-111-0000`. Using the flyer's. Needs confirming. |
-| **`m²` vs `m³`** | The event stand gives Versa 13 room capacity as `6–13 m²`. The guidelines set room volume in `m³` throughout, which is the industry convention. Rendered as printed. One-line fix if wrong. |
-| **Model codes** | The guidelines propose `SH-[line]-[output]-[finish]` and warn that mixed naming makes a small line look improvised. "Versa 13" is a third convention and its 13 reads as capacity, not output. No code assigned; the slot shows `Pending`. |
-| **Certification** | Unknown. The guidelines are emphatic that a status and a date beat silence and beat an implication that turns out wrong — so the site says plainly that nothing is published yet, rather than implying a listing. |
-| **Versa 13 specs** | Only three figures are known. Plate thickness, flue diameter, clearances, heat-up time, weight and HS code are listed as `On request` rather than guessed. An installer needs the flue spec and clearances to quote a job. |
+| **Tested figures** | Every Versa figure is a design target. Fire each stove, measure it, and flip `basis` to `'tested'` per model. |
+| **Clearances** | Not published, by choice — see above. The single most important thing to test and publish, because an installer cannot quote without them. |
+| **Model codes** | The guidelines propose `SH-[line]-[output]-[finish]` and warn that mixed naming makes a small line look improvised. The Versa names are a third convention, and "13" reads as room volume rather than output. No codes assigned; every slot shows `Pending`. |
+| **Certification** | Unknown, and Stoveman's does not carry over. The guidelines are emphatic that a status and a date beat silence and beat an implication that turns out wrong. |
+| **LS dimensions** | Only the Versa 13 LS weight is known (63 kg). The 16 LS and 20 LS carry no dimensions or weight, and the through-wall opening size is not published for any of them. |
 | **Photography** | Two usable plates. No shop photography, and no fire pit image at source resolution — the flyer's fire pit table shot has no locatable original. The firepits page runs a flat firebox hero until one exists. |
+
+### Resolved
+
+- **`m²` vs `m³`** — settled. The event stand's `6–13 m²` was a typo. The
+  Stoveman 13 manual gives "Sauna room cubage 6–13 m³". Sauna heaters are rated
+  on room **volume**, not floor area, and the site now says so on `/specs`.
+- **Firebox plate** — 5 mm, not the 6 mm used as a placeholder in the
+  guidelines PDF.

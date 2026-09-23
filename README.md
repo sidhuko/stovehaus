@@ -28,16 +28,30 @@ sizes, square corners and cascade-layer regressions.
 ## The honest-data rule
 
 The guidelines PDF states that every model name, kW figure, dimension and price
-in it is a placeholder. Exactly one real product exists — the **Versa 13**, from
-the 0002 event stand: 15.4 kW, 6–13 m², 110 kg of stone.
+in it is a placeholder, to be replaced with tested specifications before
+anything is published or sent to a customer.
 
-So `src/data/products.ts` carries that one product and eight `status: 'pending'`
-slots, which render as visibly empty cards. Nothing on this site is invented. If
-you do not have a tested figure, leave the slot pending — a slot that looks like
-a product is how a made-up specification reaches a dealer.
+The Versa line is built to the **Stoveman series** sizing ladder — 13 / 16 / 20,
+each also in an extended-firebox LS version. Stovehaus fabricates its own to
+that ladder, which means every figure on this site is a **design target, not a
+measurement**. Each one carries `basis: 'target'` and renders with a provisional
+marker. Flip it to `'tested'` per model once the stove has been fired and
+measured.
 
-Open questions (phone number, `m²` vs `m³`, model codes, certification status)
-are listed at the bottom of BRAND.md and marked `TODO` in the data files.
+Two things follow that are easy to get wrong later:
+
+- **Stoveman's CE / EN 15821 certification does not transfer** to a
+  Stovehaus-built stove. Nothing here cites it.
+- **Clearances to combustibles are not published.** They belong to a tested
+  appliance, an installer quotes a job off them, and getting them wrong on a
+  wood-burning stove is a fire risk.
+
+The other two lines carry no figures at all: jacuzzi is `coming-soon`, fire pits
+are `made-to-order` and have no catalogue because each burner is cut to the
+opening it drops into.
+
+Open questions are listed at the bottom of BRAND.md and marked `TODO` in the
+data files.
 
 ## Layout
 
@@ -48,20 +62,66 @@ src/
   data/images.ts       photography imports, so Astro can optimise them
   styles/global.css    brand tokens, @font-face, type scale, components
   components/          Header · Footer · Hero · ProductCard · SpecTable ·
-                       LineChip · LinePage · AudienceFork · MessageBlock
-  pages/               one file per route
+                       LineChip · LinePage · AudienceFork · MessageBlock ·
+                       ProvisionalNote
+  pages/               one file per route; sauna/[slug].astro builds a page
+                       per Versa model from products.ts
 public/
   brand/               the nine logo SVGs, copied from the kit — never rebuilt
   fonts/               Afacad, Spectral, IBM Plex Mono as woff2, self-hosted
   licenses/            SIL Open Font License for each face
+  CNAME · .nojekyll    GitHub Pages custom domain and Jekyll opt-out
 scripts/audit-brand.mjs
+.github/workflows/deploy.yml
 ```
+
+## Photography
+
+All Unsplash stock — see [CREDITS.md](CREDITS.md) for photo IDs and, more
+importantly, the two rules about what stock may do here. The short version:
+atmosphere and process only, never beside a figure as if it were the product.
+Stovehaus has no product photography of its own yet, so no page shows a heater
+and calls it a Versa.
 
 The homepage forks to two equally weighted paths — dealers and end buyers — so
 neither audience is treated as secondary.
 
 ## Deploying
 
-Not set up. The build is plain static output in `dist/`, so it will go anywhere.
-The Vercel CLI is not installed on this machine (`npm i -g vercel`) if that is
-the target.
+GitHub Actions → GitHub Pages, at the custom domain **stovehaus.com**.
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs on every
+push to `main`, and can be re-run by hand from the Actions tab.
+
+The workflow installs, builds, then **gates the deploy on `scripts/audit-brand.mjs`
+and `astro check`**. A page that breaks the identity or fails type checking does
+not reach the domain.
+
+### One-time setup
+
+This directory is not a git repository yet. To wire it up:
+
+```bash
+git init -b main
+git add -A && git commit -m "Stovehaus website"
+git remote add origin git@github.com:<you>/<repo>.git
+git push -u origin main
+```
+
+Then, in the repo on GitHub:
+
+1. **Settings → Pages → Source: GitHub Actions.** Not "Deploy from a branch" —
+   the workflow publishes the artifact itself.
+2. **Settings → Pages → Custom domain: `stovehaus.com`**, and tick *Enforce
+   HTTPS* once the certificate is issued.
+3. Point DNS at GitHub Pages — four `A` records for the apex
+   (`185.199.108–111.153`), or an `ALIAS`/`ANAME` if your DNS host supports it.
+
+[`public/CNAME`](public/CNAME) holds the domain and ships in every build, so a
+deploy never resets the custom domain. `public/.nojekyll` stops Pages running
+Jekyll, which would otherwise drop Astro's `_astro/` directory.
+
+### If the URL changes
+
+`site` in [astro.config.mjs](astro.config.mjs) is `https://stovehaus.com` and
+`base` is left at `/`. Moving to a project page at `user.github.io/repo/` means
+setting `base` to the repo name — otherwise every CSS, font and image URL 404s.

@@ -1,5 +1,6 @@
 ---
 import LineChip from './LineChip.astro';
+import ProvisionalNote from './ProvisionalNote.astro';
 import { getLine, type Product } from '../data/products';
 
 interface Props {
@@ -51,7 +52,10 @@ const Tag = href && !isPending ? 'a' : 'div';
         href && 'hover:border-edge transition-colors',
       ]}
     >
-      <LineChip line={line} class="self-start" />
+      <div class="flex items-start justify-between gap-3">
+        <LineChip line={line} />
+        {product.variantNote && <span class="spec text-steel">LS</span>}
+      </div>
 
       <h3 class="display-3 mt-5 text-ink">{product.name}</h3>
 
@@ -80,9 +84,12 @@ const Tag = href && !isPending ? 'a' : 'div';
         </dl>
       )}
 
-      <div class="mt-auto pt-6 flex items-baseline justify-between gap-4">
-        <span class="spec text-steel">{product.modelCode ?? 'Model code pending'}</span>
-        {product.leadTime && <span class="spec text-steel">{product.leadTime}</span>}
+      <div class="mt-auto pt-6">
+        {product.basis === 'target' && <ProvisionalNote />}
+        <div class="mt-2 flex items-baseline justify-between gap-4">
+          <span class="spec text-steel">{product.modelCode ?? 'Model code pending'}</span>
+          {product.leadTime && <span class="spec text-steel">{product.leadTime}</span>}
+        </div>
       </div>
     </Tag>
   )

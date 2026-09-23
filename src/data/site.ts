@@ -17,7 +17,12 @@
 
 export const SITE = {
   name: 'Stovehaus',
-  domain: 'stovehaus.com.mx',
+  // TODO(domain): the site deploys to stovehaus.com, but both the 0001 flyer
+  // and the 0002 event stand print stovehaus.com.mx. Either point .com.mx at
+  // the same place with a redirect, or correct the collateral — printed
+  // material sending people to a domain that does not serve the site is worse
+  // than either.
+  domain: 'stovehaus.com',
   /** Sign-off only. Never a headline, never modified, never translated. */
   tagline: 'Built for the flame.',
   description:
@@ -28,7 +33,7 @@ export const SITE = {
   // piece. Needs confirming before this site goes live.
   phone: '625-111-3000',
   phoneHref: '+526251113000',
-  email: `sales@stovehaus.com.mx`,
+  email: 'sales@stovehaus.com',
 } as const;
 
 export const NAV = [

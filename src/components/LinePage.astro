@@ -2,7 +2,8 @@
 import Base from '../layouts/Base.astro';
 import Hero from './Hero.astro';
 import ProductCard from './ProductCard.astro';
-import { getLine, productsInLine, type LineId } from '../data/products';
+import ProvisionalNote from './ProvisionalNote.astro';
+import { getLine, productsInLine, FIREPIT_VARIABLES, type LineId } from '../data/products';
 import { CERTIFICATION_STATUS } from '../data/site';
 
 interface Props {
@@ -17,6 +18,7 @@ const { id, intro, buyingNotes } = Astro.props;
 const line = getLine(id);
 const products = productsInLine(id);
 const published = products.filter((p) => p.status === 'published');
+const hasTargetFigures = published.some((p) => p.basis === 'target');
 ---
 
 <Base title={line.name} path={`/${id}`} description={line.lede}>
@@ -28,7 +30,7 @@ const published = products.filter((p) => p.status === 'published');
     imageAlt={line.imageAlt}
     imagePosition={line.imagePosition}
     ctaHref="/quote"
-    ctaLabel="Request a quote"
+    ctaLabel={line.status === 'coming-soon' ? 'Ask to be told first' : 'Request a quote'}
   />
 
   <section class="mx-auto max-w-7xl px-6 lg:px-10 py-20">
@@ -39,7 +41,9 @@ const published = products.filter((p) => p.status === 'published');
       </div>
 
       <div class="border border-hairline bg-surface-200 p-8">
-        <p class="eyebrow text-steel">Bought on</p>
+        <p class="eyebrow text-steel">
+          {line.status === 'made-to-order' ? 'Specified on' : 'Bought on'}
+        </p>
         <p class="display-3 mt-3 text-ink">{line.boughtOn}</p>
         <dl class="mt-7 border-t border-hairline">
           {
@@ -54,36 +58,103 @@ const published = products.filter((p) => p.status === 'published');
       </div>
     </div>
 
-    {/* Models. Published first, then the empty slots, which read as empty. */}
-    <div class="mt-20">
-      <div class="flex flex-wrap items-baseline justify-between gap-4 border-b border-hairline pb-4">
-        <h2 class="display-3 text-ink">Models</h2>
-        <p class="spec text-steel">
-          {published.length} published · {products.length - published.length} in testing
-        </p>
-      </div>
+    {/* ── Models, or whatever stands in for them on this line ───────────── */}
 
-      <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {
-          products.map((product) => (
-            <ProductCard
-              product={product}
-              href={product.status === 'published' ? `/${id}/${product.slug}` : undefined}
-            />
-          ))
-        }
-      </div>
+    {
+      line.status === 'available' && (
+        <div class="mt-20">
+          <div class="flex flex-wrap items-baseline justify-between gap-4 border-b border-hairline pb-4">
+            <h2 class="display-3 text-ink">Models</h2>
+            <p class="spec text-steel">{published.length} models</p>
+          </div>
 
-      {
-        published.length === 0 && (
-          <p class="body-copy mt-8 text-ink-muted">
-            Nothing in this line is published yet. We are testing, and a figure goes on this page
-            once it has been measured rather than estimated. If you need specifications now, ask
-            and we will tell you exactly where the line stands.
+          <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {products.map((product) => (
+              <ProductCard
+                product={product}
+                href={product.status === 'published' ? `/${id}/${product.slug}` : undefined}
+              />
+            ))}
+          </div>
+
+          {hasTargetFigures && (
+            <div class="mt-10">
+              <ProvisionalNote variant="panel" />
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    {
+      line.status === 'coming-soon' && (
+        /*
+          Coming soon, and nothing more. No model slots, no placeholder
+          figures, no date we cannot keep. Rule 2 of the voice: every claim
+          carries a number or a name, and if neither is available, cut the
+          claim. We do not have a date, so we do not print one.
+        */
+        <div class="mt-20 border border-hairline bg-surface-200 p-8 lg:p-12">
+          <p class="eyebrow text-steel">Coming soon</p>
+          <h2 class="display-2 mt-4 text-ink max-w-2xl">
+            The {line.name.toLowerCase()} line is in development.
+          </h2>
+          <p class="lede mt-5 text-ink-muted max-w-2xl">
+            We are building it and we are not going to put figures on this page before we have
+            measured them.
           </p>
-        )
-      }
-    </div>
+          <p class="body-copy mt-5 text-ink-muted">
+            Tell us the tub you are heating and the property it sits on, and you will hear from us
+            when the line is ready — with real numbers, not an announcement.
+          </p>
+          <div class="mt-9 flex flex-wrap items-center gap-4">
+            <a href="/quote" class="btn-outline">Ask to be told first</a>
+            <a href="/sauna" class="btn-outline">See what is shipping now</a>
+          </div>
+        </div>
+      )
+    }
+
+    {
+      line.status === 'made-to-order' && (
+        /*
+          No catalogue here. A linear burner is cut to the opening it drops
+          into, so publishing "models" would be inventing SKUs for something
+          that is dimensioned per job. The page asks for the four things we
+          need instead.
+        */
+        <div class="mt-20">
+          <div class="flex flex-wrap items-baseline justify-between gap-4 border-b border-hairline pb-4">
+            <h2 class="display-3 text-ink">Built to order</h2>
+            <p class="spec text-steel">No catalogue · cut to the job</p>
+          </div>
+
+          <p class="body-copy mt-6 text-ink-muted">
+            There is no model list for the fire pits, because a linear burner is cut to the opening
+            it drops into. Every one is made to the drawing. These are the four things we settle
+            before anything is cut.
+          </p>
+
+          <div class="mt-10 grid gap-px bg-hairline sm:grid-cols-2 border border-hairline">
+            {FIREPIT_VARIABLES.map((v, i) => (
+              <div class="bg-surface-100 p-7">
+                <p class="spec text-steel">{String(i + 1).padStart(2, '0')}</p>
+                <h3 class="label mt-3 text-ink">{v.label}</h3>
+                <p class="body-copy mt-2.5 text-ink-muted">{v.body}</p>
+              </div>
+            ))}
+          </div>
+
+          <div class="mt-10 border border-hairline bg-surface-200 p-8 flex flex-wrap items-center justify-between gap-6">
+            <p class="lede text-ink max-w-xl">
+              Send the opening dimension and the fuel, and we will come back with a drawing and a
+              price.
+            </p>
+            <a href="/quote" class="btn-outline">Start a drawing</a>
+          </div>
+        </div>
+      )
+    }
 
     {/* Certification — stated exactly, per guidelines p.9. */}
     <div class="mt-20 border border-hairline bg-gold-wash p-8">

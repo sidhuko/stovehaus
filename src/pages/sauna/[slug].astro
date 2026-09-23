@@ -1,0 +1,188 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import LineChip from '../../components/LineChip.astro';
+import SpecTable from '../../components/SpecTable.astro';
+import ProvisionalNote from '../../components/ProvisionalNote.astro';
+import { getLine, productsInLine, type Product } from '../../data/products';
+import { getImage } from '../../data/images';
+import { SITE, CERTIFICATION_STATUS } from '../../data/site';
+
+export function getStaticPaths() {
+  return productsInLine('sauna')
+    .filter((p) => p.status === 'published')
+    .map((product) => ({ params: { slug: product.slug }, props: { product } }));
+}
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+const line = getLine(product.line);
+const photo = getImage(line.image);
+
+/* The card shows three figures. Pick the ones this model is actually chosen on. */
+const HERO_LABELS = ['Room volume', 'Heater stones', 'Power rating'];
+const heroFigures = HERO_LABELS.map((label) => {
+  const row = product.specs?.find((s) => s.label === label);
+  if (!row) return null;
+  // "6–13 m³ (212–459 ft³)" → value "6–13", unit "m³". Imperial stays in the table.
+  const metric = row.value.split('(')[0].trim();
+  const parts = metric.split(' ');
+  return { label, value: parts[0], unit: parts.slice(1).join(' ') };
+}).filter((f): f is { label: string; value: string; unit: string } => f !== null);
+
+const siblings = productsInLine('sauna').filter(
+  (p) => p.status === 'published' && p.slug !== product.slug
+);
+---
+
+<Base
+  title={product.name!}
+  path="/sauna"
+  description={`${product.name} — ${product.headlineFigure!.value} ${product.headlineFigure!.unit} wood-fired sauna heater. Built in Mexico.`}
+>
+  <article>
+    {/* Masthead. A 2px gold rule and nothing else in gold — guidelines p.11. */}
+    <header class="mx-auto max-w-7xl px-6 lg:px-10 pt-12">
+      <nav aria-label="Breadcrumb" class="label text-ink-muted">
+        <a href="/sauna" class="hover:text-ink">Sauna</a>
+        <span class="text-steel mx-2">/</span>
+        <span class="text-ink">{product.name}</span>
+      </nav>
+
+      <div class="rule-gold mt-5 pt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16 items-stretch">
+        <div>
+          <div class="flex flex-wrap items-center gap-3">
+            <LineChip line={line} />
+            {
+              product.variantNote && (
+                <span class="spec text-steel">{product.variantNote}</span>
+              )
+            }
+          </div>
+          <h1 class="display-1 mt-5 text-ink">{product.name}</h1>
+          <p class="lede mt-5 text-ink-muted max-w-xl">{product.blurb}</p>
+
+          <dl class="mt-10 grid grid-cols-3 gap-6 border-t border-hairline pt-6">
+            {
+              heroFigures.map((f) => (
+                <div>
+                  <dt class="eyebrow text-steel">{f.label}</dt>
+                  <dd class="mt-2.5 flex items-baseline gap-1">
+                    <span class="font-display font-semibold text-[32px] leading-none tabular-nums text-ember">
+                      {f.value}
+                    </span>
+                    <span class="unit text-ember">{f.unit}</span>
+                  </dd>
+                </div>
+              ))
+            }
+          </dl>
+
+          {product.basis === 'target' && <div class="mt-4"><ProvisionalNote /></div>}
+
+          <div class="mt-10 flex flex-wrap items-center gap-4">
+            <a href="/quote" class="btn-gold">Request a quote</a>
+            <a href="/specs" class="btn-outline">Compare the line</a>
+          </div>
+        </div>
+
+        {
+          photo && (
+            <Image
+              src={photo}
+              alt={line.imageAlt ?? ''}
+              width={600}
+              height={750}
+              widths={[600, 1200]}
+              sizes="(min-width: 1024px) 600px, 100vw"
+              loading="eager"
+              class="w-full h-full aspect-4/5 lg:aspect-auto object-cover border border-hairline"
+              style="object-position: center 62%"
+            />
+          )
+        }
+      </div>
+    </header>
+
+    {/* Spec sheet — the page a dealer forwards to an installer (p.11). */}
+    <section class="mx-auto max-w-7xl px-6 lg:px-10 py-20">
+      <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16 items-start">
+        <div>
+          <h2 class="display-3 text-ink">Specifications</h2>
+          <p class="body-copy mt-3 text-ink-muted">
+            Metric first, imperial in parentheses. Tabular figures so columns line up when this is
+            printed or forwarded.
+          </p>
+          <div class="mt-8">
+            <SpecTable rows={product.specs!} missing={product.unknownSpecs ?? []} />
+          </div>
+        </div>
+
+        <div>
+          {product.basis === 'target' && <ProvisionalNote variant="panel" />}
+
+          <div class="mt-8 border border-hairline bg-surface-200 p-8">
+            <p class="eyebrow text-steel">Ordering</p>
+            <dl class="mt-6 border-t border-hairline">
+              {
+                [
+                  ['Model code', product.modelCode ?? 'Pending'],
+                  ['Line', 'Sauna · wood-fired'],
+                  ['Origin', 'Mexico'],
+                  ['Lead time', 'On request'],
+                  ['Incoterm', 'On request'],
+                ].map(([label, value]) => (
+                  <div class="grid grid-cols-[1fr_auto] gap-6 py-3.5 border-b border-hairline">
+                    <dt class="label font-normal text-ink-muted">{label}</dt>
+                    <dd class="spec text-ink text-right">{value}</dd>
+                  </div>
+                ))
+              }
+            </dl>
+
+            <p class="body-copy mt-6 text-ink-faint">
+              A quote from us never leaves without incoterm, currency, validity date, lead time and
+              HS code on it. Leaving those off costs more deals than the price does.
+            </p>
+
+            <a href={`tel:${SITE.phoneHref}`} class="spec link mt-6 inline-block">{SITE.phone}</a>
+          </div>
+        </div>
+      </div>
+
+      {/* The rest of the ladder — a dealer sizing a room wants the neighbours. */}
+      <div class="mt-20">
+        <h2 class="display-3 text-ink border-b border-hairline pb-4">The rest of the line</h2>
+        <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {
+            siblings.map((sibling) => (
+              <a
+                href={`/sauna/${sibling.slug}`}
+                class="border border-hairline bg-surface-100 p-6 hover:border-edge transition-colors"
+              >
+                <h3 class="display-3 text-ink">{sibling.name}</h3>
+                <p class="mt-3 flex items-baseline gap-1.5">
+                  <span class="font-display font-semibold text-[32px] leading-none tabular-nums text-ember">
+                    {sibling.headlineFigure!.value}
+                  </span>
+                  <span class="unit text-ember">{sibling.headlineFigure!.unit}</span>
+                </p>
+                <p class="spec mt-3 text-steel">
+                  {sibling.specs?.find((s) => s.label === 'Room volume')?.value.split('(')[0].trim()}
+                </p>
+              </a>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="mt-16 border border-hairline bg-gold-wash p-8">
+        <p class="eyebrow text-gold-deep">Certification</p>
+        <p class="body-copy mt-3 text-ink">{CERTIFICATION_STATUS.text}</p>
+      </div>
+    </section>
+  </article>
+</Base>

@@ -7,10 +7,19 @@ import LineChip from '../components/LineChip.astro';
 import { SITE, MESSAGES } from '../data/site';
 import { LINES, productsInLine } from '../data/products';
 
+/* Each line says where it actually stands, rather than a count that would read
+   as "0 of 3" on lines that were never going to have a model list. */
+const STATUS_LABEL = {
+  available: (n: number) => `${n} models`,
+  'coming-soon': () => 'Coming soon',
+  'made-to-order': () => 'Built to order',
+} as const;
+
 const lineSummary = LINES.map((line) => ({
   line,
-  published: productsInLine(line.id).filter((p) => p.status === 'published').length,
-  total: productsInLine(line.id).length,
+  standing: STATUS_LABEL[line.status](
+    productsInLine(line.id).filter((p) => p.status === 'published').length
+  ),
 }));
 ---
 
@@ -39,7 +48,7 @@ const lineSummary = LINES.map((line) => ({
 
     <div class="mt-14 grid gap-px bg-hairline md:grid-cols-3 border border-hairline">
       {
-        lineSummary.map(({ line, published, total }) => (
+        lineSummary.map(({ line, standing }) => (
           <a
             href={`/${line.id}`}
             class="group bg-surface-100 p-8 flex flex-col hover:bg-surface-200 transition-colors"
@@ -49,9 +58,7 @@ const lineSummary = LINES.map((line) => ({
             <p class="body-copy mt-3 text-ink-muted">{line.lede}</p>
             <div class="mt-auto pt-8 flex items-baseline justify-between gap-4 border-t border-hairline">
               <span class="label text-ink-muted">Bought on {line.boughtOn}</span>
-              <span class="spec text-steel">
-                {published} of {total}
-              </span>
+              <span class="spec text-steel">{standing}</span>
             </div>
           </a>
         ))
@@ -59,8 +66,10 @@ const lineSummary = LINES.map((line) => ({
     </div>
 
     <p class="body-copy mt-6 text-ink-faint">
-      One model is published so far. The rest of the catalogue is in testing, and we list a
-      figure only once it has been measured.
+      The sauna line is the Versa ladder — six heaters from 15.4 to 20 kW. Its figures are design
+      targets until we have fired each stove and measured it, and the site says so on every one.
+      The jacuzzi line is in development, and the fire pits have no catalogue because each is cut
+      to the opening it drops into.
     </p>
   </section>
 
