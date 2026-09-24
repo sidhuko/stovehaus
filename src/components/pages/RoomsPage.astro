@@ -1,0 +1,111 @@
+---
+import Base from '../../layouts/Base.astro';
+import Hero from '../Hero.astro';
+import { t, localePath, type Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const d = t(locale);
+const r = d.rooms;
+
+/*
+  Complete sauna rooms.
+
+  Structurally this is NOT a fourth product line, and the distinction matters:
+
+    · The line colours code what a thing heats — ember for fire, spring for
+      water, dusk for gas. A room does not burn anything, so it carries no
+      chip and no signal colour. Steel, the mill-finish token, does the work.
+    · There is no catalogue and no model slots, because there is no model. A
+      room is quoted to the drawing, the same as a fire pit.
+
+  Voice rule 2 is the binding constraint here. We hold no room specifications,
+  no standard sizes, no lead times and no photography, so this page describes
+  what we build and what we need in order to quote it — and makes no claim
+  about dimensions, materials or price. Every sentence survives the question
+  "what number or name backs that".
+
+  NO PHOTOGRAPH, deliberately. The closest plate in the library is a cedar
+  sauna interior, and on this page it would read as a room Stovehaus built.
+  That is exactly the misrepresentation CREDITS.md rules out. A flat firebox
+  band until there is a real one.
+*/
+---
+
+<Base title={d.nav.rooms} route="/rooms" locale={locale} description={r.lede}>
+  <Hero
+    eyebrow={r.eyebrow}
+    headline={r.headline}
+    lede={r.lede}
+    ctaHref={localePath(locale, '/quote')}
+    ctaLabel={d.common.requestQuote}
+    secondaryHref={localePath(locale, '/sauna')}
+    secondaryLabel={d.common.seeHeaters}
+  />
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 py-20">
+    <div class="grid gap-12 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:gap-20 items-start">
+      <div>
+        <h2 class="display-2 text-ink">{r.introTitle}</h2>
+        <p class="body-copy mt-5 text-ink-muted">{r.intro}</p>
+      </div>
+
+      <div class="border border-hairline bg-surface-200 p-8">
+        <p class="eyebrow text-steel">{d.common.specifiedOn}</p>
+        <p class="display-3 mt-3 text-ink">{r.needTitle}</p>
+        <dl class="mt-7 border-t border-hairline">
+          {
+            r.need.map((item) => (
+              <div class="py-3.5 border-b border-hairline">
+                <dt class="label font-normal text-ink-muted">{item.label}</dt>
+                <dd class="body-copy mt-1.5 text-ink-faint">{item.body}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+    </div>
+
+    {/* What we build. Four kinds, no catalogue behind any of them. */}
+    <div class="mt-20">
+      <div class="flex flex-wrap items-baseline justify-between gap-4 border-b border-hairline pb-4">
+        <h2 class="display-3 text-ink">{r.typesTitle}</h2>
+        <p class="spec text-steel">{r.noCatalogue}</p>
+      </div>
+
+      <div class="mt-10 grid gap-px bg-hairline sm:grid-cols-2 border border-hairline">
+        {
+          r.types.map((type) => (
+            <div class="bg-surface-100 p-8">
+              <p class="spec text-steel">{type.n}</p>
+              <h3 class="display-3 mt-3 text-ink">{type.title}</h3>
+              <p class="body-copy mt-3 text-ink-muted">{type.body}</p>
+            </div>
+          ))
+        }
+      </div>
+
+      <p class="body-copy mt-6 text-ink-faint">{r.needNote}</p>
+    </div>
+
+    <div
+      class="mt-16 border border-hairline bg-surface-200 p-8 flex flex-wrap items-center justify-between gap-6"
+    >
+      <p class="lede text-ink max-w-xl">{r.ctaLead}</p>
+      <a href={localePath(locale, '/quote')} class="btn-outline bx-press"
+        >{d.common.startADrawing}</a
+      >
+    </div>
+
+    {/* Certification — stated exactly, per guidelines p.9. */}
+    <div class="mt-20 border border-hairline bg-gold-wash p-8">
+      <p class="eyebrow text-gold-deep">{d.common.certification}</p>
+      <p class="body-copy mt-3 text-ink">{d.certification}</p>
+      <a href={localePath(locale, '/quote')} class="btn-outline bx-press mt-7"
+        >{d.common.askAboutLine}</a
+      >
+    </div>
+  </section>
+</Base>

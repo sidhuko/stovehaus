@@ -1,17 +1,24 @@
 ---
 import type { ProductLine } from '../data/products';
+import { t, type Locale } from '../i18n';
 
 interface Props {
   line: ProductLine;
+  locale: Locale;
   class?: string;
 }
-const { line, class: className = '' } = Astro.props;
+const { line, locale, class: className = '' } = Astro.props;
+const d = t(locale);
 
 /*
   Ember and spring are a coding system, not accents: fire marks the sauna line,
   water marks the jacuzzi line, and dusk — the proposed extension — marks the
   gas fire pit line. Spend any of the three on a button or a highlight and the
   code stops working, so they appear only here and on the headline figure.
+
+  The colour carries across languages unchanged; only the word inside changes.
+  That is the point of a code — a dealer reading a Spanish page and an
+  installer reading an English one see the same ember and know the same thing.
 
   Tailwind needs whole class names at build time, so these are written out.
 */
@@ -23,5 +30,5 @@ const CHIP = {
 ---
 
 <span class:list={['eyebrow inline-block px-2.5 py-1.5', CHIP[line.token], className]}>
-  {line.chip}
+  {d.lines[line.id].chip}
 </span>

@@ -1,0 +1,45 @@
+---
+import { t, localePath, otherLocale, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  /** Shared route key without a locale prefix. */
+  route: string;
+  class?: string;
+}
+const { locale, route, class: className = '' } = Astro.props;
+
+const other = otherLocale(locale);
+const otherDict = t(other);
+const here = t(locale);
+
+/*
+  Two languages, so this is a toggle rather than a menu — a dropdown for two
+  options is a click nobody needed.
+
+  It links to the SAME route in the other language, never to that language's
+  home page. Landing a reader back at the top of the site because they wanted
+  to read the page they were already on is the most common way a language
+  switcher gets this wrong. Both locales use the same slugs, so the target is
+  guaranteed to exist.
+
+  The label is written in the language it switches TO — "Español" on an English
+  page — because that is the only word the reader is looking for. `hreflang`
+  and `lang` tell assistive tech the link text is in another language.
+*/
+---
+
+<a
+  href={localePath(other, route)}
+  hreflang={otherDict.htmlLang}
+  lang={otherDict.htmlLang}
+  data-lang-switch={other}
+  aria-label={here.common.switchLanguage}
+  class:list={[
+    'label inline-flex items-center gap-1.5 border border-hairline px-2.5 py-1.5 text-ink-muted hover:text-ink hover:border-edge transition-colors',
+    className,
+  ]}
+>
+  <span aria-hidden="true">{otherDict.short}</span>
+  <span class="sr-only">{otherDict.name}</span>
+</a>

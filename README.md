@@ -21,9 +21,10 @@ and BRAND.md records both the rules and the two places the site had to go beyond
 kit v1.0 (a third line colour for fire pits, and gold being unusable for text
 over a photograph).
 
-`npm run audit` enforces the mechanical half of it: 27 colour-contrast
-assertions plus a pass over the built HTML for voice, unit-casing, logo minimum
-sizes, square corners and cascade-layer regressions.
+`npm run audit` enforces the mechanical half of it: 31 colour-contrast
+assertions plus a pass over all 29 built pages for voice (per language),
+unit-casing, logo minimum sizes, square corners, cascade-layer regressions and
+English/Spanish route parity.
 
 ## The honest-data rule
 
@@ -57,16 +58,18 @@ data files.
 
 ```
 src/
-  data/products.ts     product + line data — the single source of truth
+  i18n/                en.ts + es.ts dictionaries, and the path helpers
+  data/products.ts     structure and numbers — copy lives in i18n/
   data/site.ts         nav, contact, the four messages, certification status
   data/images.ts       photography imports, so Astro can optimise them
   styles/global.css    brand tokens, @font-face, type scale, components
   styles/effects.css   button treatments — .fx-* literal, .bx-* brand-native
   components/          Header · Footer · Hero · ProductCard · SpecTable ·
-                       LineChip · LinePage · AudienceFork · MessageBlock ·
-                       ProvisionalNote
-  pages/               one file per route; sauna/[slug].astro builds a page
-                       per Versa model from products.ts
+                       LineChip · AudienceFork · MessageBlock ·
+                       ProvisionalNote · LanguageSelector
+  components/pages/    the page bodies, shared by both languages
+  pages/               thin route files: src/pages (English) and
+                       src/pages/es (Spanish), same slugs in both
   pages/lab/buttons    internal, noindex: the four button effects side by side
                        with the brand rule each one touches
 public/
@@ -77,6 +80,38 @@ public/
 scripts/audit-brand.mjs
 .github/workflows/deploy.yml
 ```
+
+## Languages
+
+English on the bare routes (`/sauna/`), Spanish under `/es/` with the **same
+slugs** (`/es/sauna/`). That is what makes the language switch a prefix
+operation, which is what makes it impossible for the switcher to land on a
+page that does not exist.
+
+- **Copy lives in [`src/i18n/en.ts`](src/i18n/en.ts) and
+  [`src/i18n/es.ts`](src/i18n/es.ts)**, typed against a shared `Dict` so a
+  missing translation is a build error rather than an English string leaking
+  into a Spanish page.
+- **`src/components/pages/`** holds the page bodies. The files under
+  `src/pages/` are four-line route stubs that pass a locale.
+- **Numbers do not translate.** `15.4 kW` and `6–13 m³ (212–459 ft³)` are
+  correct in both, because es-MX and en-US share the decimal point and
+  thousands comma. Only labels move. A third locale that does not share them
+  would make these keys too.
+- **`<html lang>` is `es-MX`, not `es`** — a bare `es` reads as Peninsular
+  Spanish, and mobile Chrome offers to translate a bare-`es` page for a
+  Spanish reader.
+- **"Built for the flame." is never translated.** The guidelines forbid it, and
+  it only exists as outlined artwork inside the lockup, so there is no live
+  type to translate. The audit fails the build if it ever appears as text.
+- **`route` vs `navRoute`.** `route` is the page's own URL and drives canonical,
+  hreflang and the switcher. `navRoute` is only which nav item lights up. A
+  product page sets both, because it highlights its line but must switch to
+  itself.
+
+`npm run audit` checks route parity between the two trees, `<html lang>`,
+hreflang alternates, and that every switcher targets the same route in the
+other language.
 
 ## Photography
 
@@ -93,7 +128,7 @@ neither audience is treated as secondary.
 
 GitHub Actions → GitHub Pages, at the custom domain **stovehaus.com**.
 [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs on every
-push to `main`, and can be re-run by hand from the Actions tab.
+push to `master`, and can be re-run by hand from the Actions tab.
 
 The workflow installs, builds, then **gates the deploy on `scripts/audit-brand.mjs`
 and `astro check`**. A page that breaks the identity or fails type checking does
@@ -104,11 +139,14 @@ not reach the domain.
 This directory is not a git repository yet. To wire it up:
 
 ```bash
-git init -b main
+git init -b master
 git add -A && git commit -m "Stovehaus website"
 git remote add origin git@github.com:<you>/<repo>.git
-git push -u origin main
+git push -u origin master
 ```
+
+The workflow triggers on `master`. If you prefer `main`, change the branch in
+both places.
 
 Then, in the repo on GitHub:
 

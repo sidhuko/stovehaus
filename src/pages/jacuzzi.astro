@@ -1,22 +1,4 @@
 ---
-import LinePage from '../components/LinePage.astro';
+import LinePage from '../components/pages/LinePage.astro';
 ---
-
-<LinePage
-  id="jacuzzi"
-  intro="A wood-fired jacuzzi heater brings a tub up on wood alone. There is no pump, no element and no electrical service to run out to the pad, which is the whole reason people put one on a property where power is a trench and a permit away. Heat moves by convection: cold water leaves the bottom of the tub, passes the fire, and returns hot at the top. We are building the line now. Nothing is orderable yet."
-  buyingNotes={[
-    {
-      label: 'Tub capacity',
-      body: 'The litres the heater is sized for. Run it under capacity and heat-up drags; run it over and the water stratifies.',
-    },
-    {
-      label: 'Heat-up time',
-      body: 'From cold, at a stated ambient. A figure without an ambient temperature attached is not a figure.',
-    },
-    {
-      label: 'Coil specification',
-      body: 'Grade and wall thickness of the submerged or external coil, which is what decides how long it survives treated water.',
-    },
-  ]}
-/>
+<LinePage id="jacuzzi" locale="en" />

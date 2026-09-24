@@ -1,21 +1,34 @@
 ---
 import type { SpecRow } from '../data/products';
+import type { SpecKey } from '../i18n/types';
+import { t, type Locale } from '../i18n';
 
 interface Props {
   rows: SpecRow[];
+  locale: Locale;
   /** Specs we do not have. Listed by name so an installer can see what to ask for. */
-  missing?: string[];
+  missing?: SpecKey[];
 }
-const { rows, missing = [] } = Astro.props;
+const { rows, locale, missing = [] } = Astro.props;
+const d = t(locale);
+
+const resolved = rows.map((row) => ({
+  label: d.spec[row.key],
+  value: 'value' in row ? row.value : d.specValue[row.valueKey],
+}));
 ---
 
 {/*
   Set specifications with tabular figures so columns line up (guidelines p.11).
   Square corners, ruled rows, no shading beyond the surface tint.
+
+  Values are not translated — "Ø 115 mm (Ø 4.5 in)" is the same figure in every
+  language, and metric-first with imperial in parentheses is the brand
+  convention regardless of who is reading. Only the labels move.
 */}
 <dl class="border-t border-hairline">
   {
-    rows.map((row) => (
+    resolved.map((row) => (
       <div class="grid grid-cols-[1fr_auto] gap-6 py-3.5 border-b border-hairline">
         <dt class="label font-normal text-ink-muted">{row.label}</dt>
         <dd class="spec text-ink text-right">{row.value}</dd>
@@ -23,10 +36,10 @@ const { rows, missing = [] } = Astro.props;
     ))
   }
   {
-    missing.map((label) => (
+    missing.map((key) => (
       <div class="grid grid-cols-[1fr_auto] gap-6 py-3.5 border-b border-hairline">
-        <dt class="label font-normal text-steel">{label}</dt>
-        <dd class="spec text-steel text-right">On request</dd>
+        <dt class="label font-normal text-steel">{d.spec[key]}</dt>
+        <dd class="spec text-steel text-right">{d.common.onRequest}</dd>
       </div>
     ))
   }
@@ -35,8 +48,7 @@ const { rows, missing = [] } = Astro.props;
 {
   missing.length > 0 && (
     <p class="body-copy mt-5 text-ink-faint">
-      Figures marked <span class="spec">On request</span> have not been published yet. We would
-      rather send you a tested number than a confident one.
+      {d.product.missingNote(d.common.onRequest)}
     </p>
   )
 }

@@ -2,13 +2,16 @@
 import LineChip from './LineChip.astro';
 import ProvisionalNote from './ProvisionalNote.astro';
 import { getLine, type Product } from '../data/products';
+import { t, type Locale } from '../i18n';
 
 interface Props {
   product: Product;
+  locale: Locale;
   href?: string;
 }
-const { product, href } = Astro.props;
+const { product, locale, href } = Astro.props;
 const line = getLine(product.line);
+const d = t(locale);
 
 /*
   Card anatomy, guidelines p.10: "Line chip, name, the one figure the category
@@ -26,6 +29,11 @@ const FIGURE = {
 
 const isPending = product.status === 'pending';
 const Tag = href && !isPending ? 'a' : 'div';
+
+const rows = (product.specs ?? []).slice(0, 3).map((row) => ({
+  label: d.spec[row.key],
+  value: 'value' in row ? row.value : d.specValue[row.valueKey],
+}));
 ---
 
 {
@@ -36,12 +44,10 @@ const Tag = href && !isPending ? 'a' : 'div';
       dealer. It says what it is and stops.
     */
     <div class="border border-dashed border-edge bg-surface-100 p-6 flex flex-col min-h-70">
-      <LineChip line={line} class="self-start opacity-60" />
+      <LineChip line={line} locale={locale} class="self-start opacity-60" />
       <div class="mt-auto pt-8">
-        <p class="label text-steel">Model slot</p>
-        <p class="body-copy mt-2 text-ink-faint">
-          Specifications on request. We publish a figure once it has been tested, not before.
-        </p>
+        <p class="label text-steel">{d.common.modelSlot}</p>
+        <p class="body-copy mt-2 text-ink-faint">{d.linePage.slotBody}</p>
       </div>
     </div>
   ) : (
@@ -53,8 +59,8 @@ const Tag = href && !isPending ? 'a' : 'div';
       ]}
     >
       <div class="flex items-start justify-between gap-3">
-        <LineChip line={line} />
-        {product.variantNote && <span class="spec text-steel">LS</span>}
+        <LineChip line={line} locale={locale} />
+        {product.isVariant && <span class="spec text-steel">LS</span>}
       </div>
 
       <h3 class="display-3 mt-5 text-ink">{product.name}</h3>
@@ -73,9 +79,9 @@ const Tag = href && !isPending ? 'a' : 'div';
         </p>
       )}
 
-      {product.specs && (
+      {rows.length > 0 && (
         <dl class="mt-5 border-t border-hairline">
-          {product.specs.slice(0, 3).map((row) => (
+          {rows.map((row) => (
             <div class="flex justify-between gap-4 py-2 border-b border-hairline">
               <dt class="label text-ink-muted font-normal">{row.label}</dt>
               <dd class="spec text-ink text-right">{row.value}</dd>
@@ -85,10 +91,10 @@ const Tag = href && !isPending ? 'a' : 'div';
       )}
 
       <div class="mt-auto pt-6">
-        {product.basis === 'target' && <ProvisionalNote />}
+        {product.basis === 'target' && <ProvisionalNote locale={locale} />}
         <div class="mt-2 flex items-baseline justify-between gap-4">
-          <span class="spec text-steel">{product.modelCode ?? 'Model code pending'}</span>
-          {product.leadTime && <span class="spec text-steel">{product.leadTime}</span>}
+          <span class="spec text-steel">{product.modelCode ?? d.common.modelCodePending}</span>
+          <span class="spec text-steel">{d.common.leadTimeOnRequest}</span>
         </div>
       </div>
     </Tag>

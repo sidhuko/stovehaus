@@ -1,0 +1,195 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import LineChip from '../LineChip.astro';
+import SpecTable from '../SpecTable.astro';
+import ProvisionalNote from '../ProvisionalNote.astro';
+import { getLine, productsInLine, specValue, type Product } from '../../data/products';
+import { getImage } from '../../data/images';
+import { SITE } from '../../data/site';
+import { t, localePath, type Locale } from '../../i18n';
+
+interface Props {
+  product: Product;
+  locale: Locale;
+}
+
+const { product, locale } = Astro.props;
+const d = t(locale);
+const line = getLine(product.line);
+const photo = getImage(line.image);
+const copy = d.products[product.slug];
+
+/* The masthead shows three figures. Pick the ones this model is chosen on. */
+const HERO_KEYS = ['roomVolume', 'heaterStones', 'powerRating'] as const;
+const heroFigures = HERO_KEYS.map((key) => {
+  const metric = specValue(product, key);
+  if (!metric) return null;
+  // "6–13 m³" → value "6–13", unit "m³". Imperial stays in the table.
+  const parts = metric.split(' ');
+  return { label: d.spec[key], value: parts[0], unit: parts.slice(1).join(' ') };
+}).filter((f): f is { label: string; value: string; unit: string } => f !== null);
+
+const siblings = productsInLine(product.line).filter(
+  (p) => p.status === 'published' && p.slug !== product.slug
+);
+
+const orderingRows: [string, string][] = [
+  [d.product.orderingRows[0][0], product.modelCode ?? d.common.pending],
+  [d.product.orderingRows[1][0], d.specValue.saunaWoodFired],
+  [d.product.orderingRows[2][0], d.specValue.mexico],
+  [d.product.orderingRows[3][0], d.common.onRequest],
+  [d.product.orderingRows[4][0], d.common.onRequest],
+];
+---
+
+<Base
+  title={product.name!}
+  route={`/${product.line}/${product.slug}`}
+  navRoute={`/${product.line}`}
+  locale={locale}
+  description={`${product.name} — ${product.headlineFigure!.value} ${product.headlineFigure!.unit}. ${copy.blurb.slice(0, 110)}`}
+>
+  <article>
+    {/* Masthead. A 2px gold rule and nothing else in gold — guidelines p.11. */}
+    <header class="mx-auto max-w-7xl px-6 lg:px-10 pt-12">
+      <nav aria-label="Breadcrumb" class="label text-ink-muted">
+        <a href={localePath(locale, `/${product.line}`)} class="hover:text-ink"
+          >{d.lines[product.line].name}</a
+        >
+        <span class="text-steel mx-2">/</span>
+        <span class="text-ink">{product.name}</span>
+      </nav>
+
+      <div
+        class="rule-gold mt-5 pt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16 items-stretch"
+      >
+        <div>
+          <div class="flex flex-wrap items-center gap-3">
+            <LineChip line={line} locale={locale} />
+            {copy.variantNote && <span class="spec text-steel">{copy.variantNote}</span>}
+          </div>
+          <h1 class="display-1 mt-5 text-ink">{product.name}</h1>
+          <p class="lede mt-5 text-ink-muted max-w-xl">{copy.blurb}</p>
+
+          <dl class="mt-10 grid grid-cols-3 gap-6 border-t border-hairline pt-6">
+            {
+              heroFigures.map((f) => (
+                <div>
+                  <dt class="eyebrow text-steel">{f.label}</dt>
+                  <dd class="mt-2.5 flex items-baseline gap-1">
+                    <span class="font-display font-semibold text-[32px] leading-none tabular-nums text-ember">
+                      {f.value}
+                    </span>
+                    <span class="unit text-ember">{f.unit}</span>
+                  </dd>
+                </div>
+              ))
+            }
+          </dl>
+
+          {
+            product.basis === 'target' && (
+              <div class="mt-4">
+                <ProvisionalNote locale={locale} />
+              </div>
+            )
+          }
+
+          <div class="mt-10 flex flex-wrap items-center gap-4">
+            <a href={localePath(locale, '/quote')} class="btn-gold bx-press bx-liquid"
+              >{d.common.requestQuote}</a
+            >
+            <a href={localePath(locale, '/specs')} class="btn-outline bx-press"
+              >{d.common.compareTheLine}</a
+            >
+          </div>
+        </div>
+
+        {
+          photo && (
+            <Image
+              src={photo}
+              alt={d.lines[product.line].imageAlt ?? ''}
+              width={600}
+              height={750}
+              widths={[600, 1200]}
+              sizes="(min-width: 1024px) 600px, 100vw"
+              loading="eager"
+              class="w-full h-full aspect-4/5 lg:aspect-auto object-cover border border-hairline"
+              style="object-position: center 62%"
+            />
+          )
+        }
+      </div>
+    </header>
+
+    {/* Spec sheet — the page a dealer forwards to an installer (p.11). */}
+    <section class="mx-auto max-w-7xl px-6 lg:px-10 py-20">
+      <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16 items-start">
+        <div>
+          <h2 class="display-3 text-ink">{d.common.specifications}</h2>
+          <p class="body-copy mt-3 text-ink-muted">{d.product.specsNote}</p>
+          <div class="mt-8">
+            <SpecTable
+              rows={product.specs!}
+              locale={locale}
+              missing={product.unknownSpecs ?? []}
+            />
+          </div>
+        </div>
+
+        <div>
+          {product.basis === 'target' && <ProvisionalNote locale={locale} variant="panel" />}
+
+          <div class="mt-8 border border-hairline bg-surface-200 p-8">
+            <p class="eyebrow text-steel">{d.common.ordering}</p>
+            <dl class="mt-6 border-t border-hairline">
+              {
+                orderingRows.map(([label, value]) => (
+                  <div class="grid grid-cols-[1fr_auto] gap-6 py-3.5 border-b border-hairline">
+                    <dt class="label font-normal text-ink-muted">{label}</dt>
+                    <dd class="spec text-ink text-right">{value}</dd>
+                  </div>
+                ))
+              }
+            </dl>
+
+            <p class="body-copy mt-6 text-ink-faint">{d.product.quoteCarries}</p>
+
+            <a href={`tel:${SITE.phoneHref}`} class="spec link mt-6 inline-block">{SITE.phone}</a>
+          </div>
+        </div>
+      </div>
+
+      {/* The rest of the ladder — a dealer sizing a room wants the neighbours. */}
+      <div class="mt-20">
+        <h2 class="display-3 text-ink border-b border-hairline pb-4">{d.product.restOfLine}</h2>
+        <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {
+            siblings.map((sibling) => (
+              <a
+                href={localePath(locale, `/${sibling.line}/${sibling.slug}`)}
+                class="border border-hairline bg-surface-100 p-6 hover:border-edge transition-colors"
+              >
+                <h3 class="display-3 text-ink">{sibling.name}</h3>
+                <p class="mt-3 flex items-baseline gap-1.5">
+                  <span class="font-display font-semibold text-[32px] leading-none tabular-nums text-ember">
+                    {sibling.headlineFigure!.value}
+                  </span>
+                  <span class="unit text-ember">{sibling.headlineFigure!.unit}</span>
+                </p>
+                <p class="spec mt-3 text-steel">{specValue(sibling, 'roomVolume')}</p>
+              </a>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="mt-16 border border-hairline bg-gold-wash p-8">
+        <p class="eyebrow text-gold-deep">{d.common.certification}</p>
+        <p class="body-copy mt-3 text-ink">{d.certification}</p>
+      </div>
+    </section>
+  </article>
+</Base>

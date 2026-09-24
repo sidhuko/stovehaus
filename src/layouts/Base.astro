@@ -3,36 +3,70 @@ import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE } from '../data/site';
+import { t, localePath, LOCALES, DEFAULT_LOCALE, type Locale } from '../i18n';
 
 interface Props {
   title: string;
   description?: string;
-  /** Current path, for the 2px gold underline on active nav. */
-  path?: string;
+  /**
+   * This page's OWN route, without a locale prefix, e.g. "/sauna/versa-16".
+   * Drives the canonical URL, the hreflang alternates and the language
+   * switcher — so it has to be the page itself, never its section.
+   */
+  route: string;
+  /**
+   * Which nav item to mark active, when that differs from the page's own
+   * route. A product page is its own URL but highlights its line.
+   */
+  navRoute?: string;
+  locale: Locale;
   /** Internal pages that should not be indexed or shown in nav. */
   noindex?: boolean;
 }
 
-const {
-  title,
-  description = SITE.description,
-  path = Astro.url.pathname,
-  noindex = false,
-} = Astro.props;
+const { title, description, route, navRoute, locale, noindex = false } = Astro.props;
+const d = t(locale);
 const fullTitle = title === SITE.name ? SITE.name : `${title} — ${SITE.name}`;
+const path = localePath(locale, route);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={d.htmlLang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
-    <meta name="description" content={description} />
+    <meta name="description" content={description ?? d.siteDescription} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
     {/* The mark alone — it is the only part that survives a round crop. */}
     <link rel="icon" href="/brand/stovehaus-mark-gold.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/brand/stovehaus-mark-gold.png" />
+
+    {/*
+      Every page exists in both languages at the same slug, so the alternates
+      are a prefix apart and can be generated rather than maintained. x-default
+      points at English, which is the source language and the one a dealer in
+      the US or Canada lands on.
+    */}
+    {
+      !noindex && (
+        <>
+          {LOCALES.map((l) => (
+            <link
+              rel="alternate"
+              hreflang={t(l).htmlLang}
+              href={new URL(localePath(l, route), SITE.url).href}
+            />
+          ))}
+          <link
+            rel="alternate"
+            hreflang="x-default"
+            href={new URL(localePath(DEFAULT_LOCALE, route), SITE.url).href}
+          />
+          <link rel="canonical" href={new URL(path, SITE.url).href} />
+        </>
+      )
+    }
 
     <!-- The three faces, preloaded. All self-hosted from brand-kit/02-Fonts. -->
     <link rel="preload" href="/fonts/Afacad-600.woff2" as="font" type="font/woff2" crossorigin />
@@ -40,21 +74,22 @@ const fullTitle = title === SITE.name ? SITE.name : `${title} — ${SITE.name}`;
     <link rel="preload" href="/fonts/IBMPlexMono-400.woff2" as="font" type="font/woff2" crossorigin />
 
     <meta property="og:title" content={fullTitle} />
-    <meta property="og:description" content={description} />
+    <meta property="og:description" content={description ?? d.siteDescription} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:locale" content={d.htmlLang.replace('-', '_')} />
   </head>
   <body class="min-h-screen flex flex-col">
     <a
       href="#main"
       class="label sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:bg-ink focus:text-surface-100 focus:px-4 focus:py-2"
-      >Skip to content</a
+      >{d.common.skipToContent}</a
     >
-    <Header path={path} />
+    <Header locale={locale} route={route} navRoute={navRoute ?? route} />
     <main id="main" class="flex-1">
       <slot />
     </main>
-    <Footer />
+    <Footer locale={locale} route={route} />
 
     {/*
       Liquid-fill entry point. The reveal is meant to grow from where the

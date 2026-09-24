@@ -1,53 +1,52 @@
 ---
-import Base from '../layouts/Base.astro';
-import Hero from './Hero.astro';
-import ProductCard from './ProductCard.astro';
-import ProvisionalNote from './ProvisionalNote.astro';
-import { getLine, productsInLine, FIREPIT_VARIABLES, type LineId } from '../data/products';
-import { CERTIFICATION_STATUS } from '../data/site';
+import Base from '../../layouts/Base.astro';
+import Hero from '../Hero.astro';
+import ProductCard from '../ProductCard.astro';
+import ProvisionalNote from '../ProvisionalNote.astro';
+import { getLine, productsInLine, type LineId } from '../../data/products';
+import { t, localePath, type Locale } from '../../i18n';
 
 interface Props {
   id: LineId;
-  /** Copy specific to this line — written per line, not templated. */
-  intro: string;
-  /** What this line is actually bought on, spelled out for a skimming reader. */
-  buyingNotes: { label: string; body: string }[];
+  locale: Locale;
 }
 
-const { id, intro, buyingNotes } = Astro.props;
+const { id, locale } = Astro.props;
+const d = t(locale);
+const copy = d.lines[id];
 const line = getLine(id);
 const products = productsInLine(id);
 const published = products.filter((p) => p.status === 'published');
 const hasTargetFigures = published.some((p) => p.basis === 'target');
 ---
 
-<Base title={line.name} path={`/${id}`} description={line.lede}>
+<Base title={copy.name} route={`/${id}`} locale={locale} description={copy.lede}>
   <Hero
-    eyebrow={line.eyebrow}
-    headline={line.headline}
-    lede={line.lede}
+    eyebrow={copy.eyebrow}
+    headline={copy.headline}
+    lede={copy.lede}
     image={line.image}
-    imageAlt={line.imageAlt}
+    imageAlt={copy.imageAlt}
     imagePosition={line.imagePosition}
-    ctaHref="/quote"
-    ctaLabel={line.status === 'coming-soon' ? 'Ask to be told first' : 'Request a quote'}
+    ctaHref={localePath(locale, '/quote')}
+    ctaLabel={line.status === 'coming-soon' ? d.common.askToBeToldFirst : d.common.requestQuote}
   />
 
   <section class="mx-auto max-w-7xl px-6 lg:px-10 py-20">
     <div class="grid gap-12 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:gap-20 items-start">
       <div>
-        <h2 class="display-2 text-ink">The line</h2>
-        <p class="body-copy mt-5 text-ink-muted">{intro}</p>
+        <h2 class="display-2 text-ink">{d.common.theLine}</h2>
+        <p class="body-copy mt-5 text-ink-muted">{copy.intro}</p>
       </div>
 
       <div class="border border-hairline bg-surface-200 p-8">
         <p class="eyebrow text-steel">
-          {line.status === 'made-to-order' ? 'Specified on' : 'Bought on'}
+          {line.status === 'made-to-order' ? d.common.specifiedOn : d.common.boughtOn}
         </p>
-        <p class="display-3 mt-3 text-ink">{line.boughtOn}</p>
+        <p class="display-3 mt-3 text-ink">{copy.boughtOn}</p>
         <dl class="mt-7 border-t border-hairline">
           {
-            buyingNotes.map((note) => (
+            copy.buyingNotes.map((note) => (
               <div class="py-3.5 border-b border-hairline">
                 <dt class="label font-normal text-ink-muted">{note.label}</dt>
                 <dd class="body-copy mt-1.5 text-ink-faint">{note.body}</dd>
@@ -64,22 +63,27 @@ const hasTargetFigures = published.some((p) => p.basis === 'target');
       line.status === 'available' && (
         <div class="mt-20">
           <div class="flex flex-wrap items-baseline justify-between gap-4 border-b border-hairline pb-4">
-            <h2 class="display-3 text-ink">Models</h2>
-            <p class="spec text-steel">{published.length} models</p>
+            <h2 class="display-3 text-ink">{d.common.models}</h2>
+            <p class="spec text-steel">{d.linePage.modelsCount(published.length)}</p>
           </div>
 
           <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((product) => (
               <ProductCard
                 product={product}
-                href={product.status === 'published' ? `/${id}/${product.slug}` : undefined}
+                locale={locale}
+                href={
+                  product.status === 'published'
+                    ? localePath(locale, `/${id}/${product.slug}`)
+                    : undefined
+                }
               />
             ))}
           </div>
 
           {hasTargetFigures && (
             <div class="mt-10">
-              <ProvisionalNote variant="panel" />
+              <ProvisionalNote locale={locale} variant="panel" />
             </div>
           )}
         </div>
@@ -95,21 +99,19 @@ const hasTargetFigures = published.some((p) => p.basis === 'target');
           claim. We do not have a date, so we do not print one.
         */
         <div class="mt-20 border border-hairline bg-surface-200 p-8 lg:p-12">
-          <p class="eyebrow text-steel">Coming soon</p>
+          <p class="eyebrow text-steel">{d.linePage.comingSoonEyebrow}</p>
           <h2 class="display-2 mt-4 text-ink max-w-2xl">
-            The {line.name.toLowerCase()} line is in development.
+            {d.linePage.comingSoonTitle(copy.name)}
           </h2>
-          <p class="lede mt-5 text-ink-muted max-w-2xl">
-            We are building it and we are not going to put figures on this page before we have
-            measured them.
-          </p>
-          <p class="body-copy mt-5 text-ink-muted">
-            Tell us the tub you are heating and the property it sits on, and you will hear from us
-            when the line is ready — with real numbers, not an announcement.
-          </p>
+          <p class="lede mt-5 text-ink-muted max-w-2xl">{d.linePage.comingSoonLede}</p>
+          <p class="body-copy mt-5 text-ink-muted">{d.linePage.comingSoonBody}</p>
           <div class="mt-9 flex flex-wrap items-center gap-4">
-            <a href="/quote" class="btn-outline">Ask to be told first</a>
-            <a href="/sauna" class="btn-outline">See what is shipping now</a>
+            <a href={localePath(locale, '/quote')} class="btn-outline bx-press">
+              {d.common.askToBeToldFirst}
+            </a>
+            <a href={localePath(locale, '/sauna')} class="btn-outline bx-press">
+              {d.common.seeWhatIsShipping}
+            </a>
           </div>
         </div>
       )
@@ -125,18 +127,14 @@ const hasTargetFigures = published.some((p) => p.basis === 'target');
         */
         <div class="mt-20">
           <div class="flex flex-wrap items-baseline justify-between gap-4 border-b border-hairline pb-4">
-            <h2 class="display-3 text-ink">Built to order</h2>
-            <p class="spec text-steel">No catalogue · cut to the job</p>
+            <h2 class="display-3 text-ink">{d.linePage.builtToOrderNote}</h2>
+            <p class="spec text-steel">{d.linePage.noCatalogue}</p>
           </div>
 
-          <p class="body-copy mt-6 text-ink-muted">
-            There is no model list for the fire pits, because a linear burner is cut to the opening
-            it drops into. Every one is made to the drawing. These are the four things we settle
-            before anything is cut.
-          </p>
+          <p class="body-copy mt-6 text-ink-muted">{d.linePage.builtToOrderBody}</p>
 
           <div class="mt-10 grid gap-px bg-hairline sm:grid-cols-2 border border-hairline">
-            {FIREPIT_VARIABLES.map((v, i) => (
+            {d.firepitVariables.map((v, i) => (
               <div class="bg-surface-100 p-7">
                 <p class="spec text-steel">{String(i + 1).padStart(2, '0')}</p>
                 <h3 class="label mt-3 text-ink">{v.label}</h3>
@@ -146,11 +144,10 @@ const hasTargetFigures = published.some((p) => p.basis === 'target');
           </div>
 
           <div class="mt-10 border border-hairline bg-surface-200 p-8 flex flex-wrap items-center justify-between gap-6">
-            <p class="lede text-ink max-w-xl">
-              Send the opening dimension and the fuel, and we will come back with a drawing and a
-              price.
-            </p>
-            <a href="/quote" class="btn-outline">Start a drawing</a>
+            <p class="lede text-ink max-w-xl">{d.linePage.firepitCta}</p>
+            <a href={localePath(locale, '/quote')} class="btn-outline bx-press">
+              {d.common.startADrawing}
+            </a>
           </div>
         </div>
       )
@@ -158,9 +155,11 @@ const hasTargetFigures = published.some((p) => p.basis === 'target');
 
     {/* Certification — stated exactly, per guidelines p.9. */}
     <div class="mt-20 border border-hairline bg-gold-wash p-8">
-      <p class="eyebrow text-gold-deep">Certification</p>
-      <p class="body-copy mt-3 text-ink">{CERTIFICATION_STATUS.text}</p>
-      <a href="/quote" class="btn-outline mt-7">Ask about this line</a>
+      <p class="eyebrow text-gold-deep">{d.common.certification}</p>
+      <p class="body-copy mt-3 text-ink">{d.certification}</p>
+      <a href={localePath(locale, '/quote')} class="btn-outline bx-press mt-7"
+        >{d.common.askAboutLine}</a
+      >
     </div>
   </section>
 </Base>

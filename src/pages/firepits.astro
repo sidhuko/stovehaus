@@ -1,22 +1,4 @@
 ---
-import LinePage from '../components/LinePage.astro';
+import LinePage from '../components/pages/LinePage.astro';
 ---
-
-<LinePage
-  id="firepits"
-  intro="The fire pits run on gas rather than wood, which makes them a different animal to the rest of the catalogue: no ash, no smoke downwind of a dinner table, and a flame that goes out when you turn the valve. They are welded steel like everything else we make, and there is no model list — a linear burner is cut to the opening it drops into, so every one is built to the drawing for the table, terrace or roof deck it is going into."
-  buyingNotes={[
-    {
-      label: 'Burner length',
-      body: 'Cut to the opening. Give us the finished dimension and we work back from it.',
-    },
-    {
-      label: 'Output',
-      body: 'Follows the length, stated in kW and BTU/h on the drawing.',
-    },
-    {
-      label: 'Fuel type',
-      body: 'Natural gas or propane. The orifice differs, so it is settled before anything is cut.',
-    },
-  ]}
-/>
+<LinePage id="firepits" locale="en" />

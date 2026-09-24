@@ -1,0 +1,156 @@
+---
+import Base from '../../layouts/Base.astro';
+import LineChip from '../LineChip.astro';
+import ProvisionalNote from '../ProvisionalNote.astro';
+import { PRODUCTS, LINES, getLine, specValue } from '../../data/products';
+import { t, localePath, type Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const d = t(locale);
+
+const published = PRODUCTS.filter((p) => p.status === 'published');
+---
+
+<Base title={d.nav.specs} route="/specs" locale={locale} description={d.specs.lede}>
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 pt-16">
+    <p class="eyebrow text-steel">{d.specs.eyebrow}</p>
+    <h1 class="display-1 mt-5 text-ink max-w-3xl">{d.specs.headline}</h1>
+    <p class="lede mt-6 text-ink-muted max-w-2xl">{d.specs.lede}</p>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 py-16">
+    <div class="flex flex-wrap items-baseline justify-between gap-4 border-b border-hairline pb-4">
+      <h2 class="display-3 text-ink">{d.specs.ladderTitle}</h2>
+      <p class="spec text-steel">{d.linePage.modelsCount(published.length)}</p>
+    </div>
+
+    <div class="mt-8 overflow-x-auto">
+      <table class="w-full min-w-205 border-collapse">
+        <thead>
+          <tr class="border-b border-hairline">
+            {
+              d.specs.columns.map((col, i) => (
+                <th
+                  class:list={[
+                    'eyebrow text-steel py-3',
+                    i < 3 ? 'text-left pr-6' : 'text-right',
+                    i < d.specs.columns.length - 1 && 'pr-6',
+                  ]}
+                >
+                  {col}
+                </th>
+              ))
+            }
+          </tr>
+        </thead>
+        <tbody>
+          {
+            published.map((product) => (
+              <tr class="border-b border-hairline">
+                <td class="py-4 pr-6">
+                  <LineChip line={getLine(product.line)} locale={locale} />
+                </td>
+                <td class="py-4 pr-6">
+                  <a
+                    href={localePath(locale, `/${product.line}/${product.slug}`)}
+                    class="label link"
+                  >
+                    {product.name}
+                  </a>
+                </td>
+                <td class="spec text-steel py-4 pr-6">{product.modelCode ?? d.common.pending}</td>
+                <td class="spec text-ink text-right py-4 pr-6">
+                  {product.headlineFigure
+                    ? `${product.headlineFigure.value} ${product.headlineFigure.unit}`
+                    : '—'}
+                </td>
+                <td class="spec text-ink text-right py-4 pr-6">
+                  {specValue(product, 'roomVolume') ?? '—'}
+                </td>
+                <td class="spec text-ink text-right py-4 pr-6">
+                  {specValue(product, 'heaterStones') ?? '—'}
+                </td>
+                <td class="spec text-ink text-right py-4">
+                  {specValue(product, 'flueDiameter') ?? '—'}
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-10 max-w-3xl">
+      <ProvisionalNote locale={locale} variant="panel" />
+    </div>
+
+    {/* The other two lines are not a table — they have nothing to tabulate. */}
+    <div class="mt-12 grid gap-px bg-hairline sm:grid-cols-2 border border-hairline max-w-3xl">
+      {
+        LINES.filter((l) => l.status !== 'available').map((l) => (
+          <div class="bg-surface-100 p-7">
+            <LineChip line={l} locale={locale} />
+            <p class="label mt-4 text-ink">
+              {l.status === 'coming-soon' ? d.common.comingSoon : d.common.builtToOrder}
+            </p>
+            <p class="body-copy mt-2 text-ink-muted">
+              {l.status === 'coming-soon'
+                ? d.specs.comingSoonBlurb
+                : d.specs.builtToOrderBlurb}
+            </p>
+            <a href={localePath(locale, `/${l.id}`)} class="link body-copy mt-4 inline-block">
+              {d.lines[l.id].name}
+            </a>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 pb-16">
+    <div class="grid gap-12 lg:grid-cols-2 lg:gap-20 items-start">
+      <div>
+        <h2 class="display-3 text-ink">{d.specs.readingCodeTitle}</h2>
+        <p class="body-copy mt-4 text-ink-muted">
+          {d.specs.readingCodeBody} <span class="spec">SH – line – output – finish</span>.
+        </p>
+        <dl class="mt-8 border-t border-hairline">
+          {
+            d.specs.codeParts.map(([code, meaning]) => (
+              <div class="grid grid-cols-[auto_1fr] gap-6 py-3.5 border-b border-hairline">
+                <dt class="spec text-ink">{code}</dt>
+                <dd class="body-copy text-ink-muted text-right">{meaning}</dd>
+              </div>
+            ))
+          }
+        </dl>
+        <p class="body-copy mt-5 text-ink-faint">
+          <span class="spec">SH-SN-16-CS</span>
+          {' '}{d.specs.codeExample}
+        </p>
+      </div>
+
+      <div>
+        <h2 class="display-3 text-ink">{d.specs.unitsTitle}</h2>
+        <p class="body-copy mt-4 text-ink-muted">{d.specs.unitsBody}</p>
+
+        <div class="mt-8 border border-hairline bg-gold-wash p-8">
+          <p class="eyebrow text-gold-deep">{d.common.certification}</p>
+          <p class="body-copy mt-3 text-ink">{d.certification}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 pb-8">
+    <div class="rule-gold pt-8 flex flex-wrap items-baseline justify-between gap-5">
+      <p class="display-3 text-ink max-w-xl">{d.specs.needFigure}</p>
+      <a href={localePath(locale, '/quote')} class="btn-gold bx-press bx-liquid"
+        >{d.common.requestQuote}</a
+      >
+    </div>
+  </section>
+</Base>

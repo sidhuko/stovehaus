@@ -358,6 +358,48 @@ const effectsInUse = new Map();
   }
 }
 
+/*
+  Mexican phone formats. Three representations of one number, and two of them
+  fail silently when wrong:
+
+    · tel: without +52 will not dial from the United States or Canada, which
+      is the entire export market.
+    · A wa.me link using the legacy thirteen-digit "521" mobile form resolves
+      to nothing. WhatsApp dropped the 1 in 2020, but it is still copied
+      around constantly, and the failure is invisible — the link opens and the
+      chat simply does not exist.
+
+  So: display is the ten-digit local form, tel: is +52 plus ten, wa.me is 52
+  plus ten with no plus and no 1.
+*/
+{
+  const site = readFileSync(join(ROOT, 'src/data/site.ts'), 'utf8').replace(
+    /\/\*[\s\S]*?\*\//g,
+    ''
+  );
+  const field = (name) => site.match(new RegExp(`${name}:\\s*'([^']+)'`))?.[1];
+
+  const digits = field('phoneDigits');
+  const display = field('phone');
+  const tel = field('phoneHref');
+  const wa = field('whatsapp');
+
+  if (!/^\d{10}$/.test(digits ?? '')) {
+    markupIssues.push(`site.ts — phoneDigits "${digits}" is not ten digits`);
+  }
+  if (display?.replace(/\D/g, '') !== digits) {
+    markupIssues.push(`site.ts — phone "${display}" does not match phoneDigits "${digits}"`);
+  }
+  if (tel !== `+52${digits}`) {
+    markupIssues.push(`site.ts — phoneHref "${tel}" should be "+52${digits}" (E.164)`);
+  }
+  if (wa !== `52${digits}`) {
+    markupIssues.push(
+      `site.ts — whatsapp "${wa}" should be "52${digits}" — no plus, and NOT the legacy 521 form`
+    );
+  }
+}
+
 const htmlFiles = [];
 const walk = (dir) => {
   for (const entry of readdirSync(dir)) {
@@ -406,19 +448,33 @@ for (const file of htmlFiles) {
     }
   }
 
-  // Words the guidelines tell us not to use (p.8).
-  for (const word of [
-    'artisanal',
-    'bespoke',
-    'crafted',
-    'partner ecosystem',
-    'availability window',
-    'low-cost region',
-    'offshore',
-  ]) {
+  // Words the guidelines tell us not to use (p.8), per language. The Spanish
+  // list is deliberately short and unambiguous: "a medida" is NOT on it,
+  // because "hecho a la medida" is the approved phrase for the made-to-order
+  // fire pit line and flagging it would train people to ignore this check.
+  const isSpanish = /<html[^>]+lang="es/.test(html);
+  const AVOIDED = isSpanish
+    ? ['solución', 'artesanal', 'ecosistema de socios', 'de vanguardia', 'sinergia', 'deslocalización']
+    : [
+        'artisanal',
+        'bespoke',
+        'crafted',
+        'partner ecosystem',
+        'availability window',
+        'low-cost region',
+        'offshore',
+      ];
+  for (const word of AVOIDED) {
     if (new RegExp(`\\b${word}\\b`, 'i').test(text)) {
       markupIssues.push(`${page} — uses avoided word "${word}" (p.8)`);
     }
+  }
+
+  // The tagline is never translated and never set as live type — it exists
+  // only as outlined artwork inside the lockup. If it shows up in the text of
+  // a page, someone has re-typeset it, which README rule 5 forbids outright.
+  if (/Built for the flame/i.test(text)) {
+    markupIssues.push(`${page} — tagline set as live type (it is artwork; never re-typeset it)`);
   }
 
   // The tagline signs off in the footer only — never in the hero (p.10).
@@ -459,6 +515,19 @@ for (const file of htmlFiles) {
     const re = new RegExp(`(^|[\\s>(])${bad.replace('²', '²')}([\\s<).,·]|$)`);
     if (re.test(text)) {
       markupIssues.push(`${page} — unit rendered as "${bad}" (case-significant)`);
+    }
+  }
+
+  // A wa.me link built with the legacy 521 prefix opens a chat that does not
+  // exist. Catch it in the output, not just the config.
+  if (/wa\.me\/521\d/.test(body)) {
+    markupIssues.push(`${page} — wa.me link uses the legacy 521 form (should be 52 + ten digits)`);
+  }
+
+  // Superseded placeholder numbers from the 0001 flyer and 0002 event stand.
+  for (const stale of ['625-111-3000', '625-111-0000', '6251113000', '6251110000']) {
+    if (body.includes(stale)) {
+      markupIssues.push(`${page} — contains superseded phone number ${stale}`);
     }
   }
 
@@ -508,6 +577,87 @@ for (const r of results) {
   );
 }
 
+/*
+  Localisation structure.
+
+  English lives on the bare routes and Spanish under /es/ with the SAME slugs,
+  which is what makes the language switch a prefix operation. The value of that
+  choice is only real if the two trees actually match — a switcher that can
+  land on a 404 is worse than no switcher, because it breaks trust at exactly
+  the moment someone is telling you they cannot read the page.
+*/
+const i18nIssues = [];
+{
+  const routeOf = (file) => '/' + relative(DIST, file).replace(/index\.html$/, '');
+  const all = htmlFiles.map(routeOf);
+  const internal = (r) => r.startsWith('/lab/');
+
+  const enRoutes = all.filter((r) => !r.startsWith('/es/') && !internal(r));
+  const esRoutes = all.filter((r) => r.startsWith('/es/'));
+  const esAsEn = esRoutes.map((r) => r.replace(/^\/es/, '') || '/');
+
+  for (const r of enRoutes) {
+    if (!esAsEn.includes(r)) i18nIssues.push(`missing Spanish page for ${r} (expected /es${r})`);
+  }
+  for (const r of esAsEn) {
+    if (!enRoutes.includes(r)) i18nIssues.push(`missing English page for /es${r}`);
+  }
+
+  for (const file of htmlFiles) {
+    const route = routeOf(file);
+    if (internal(route)) continue;
+    const html = readFileSync(file, 'utf8');
+    const isEs = route.startsWith('/es/');
+
+    // <html lang> must match the locale, and Spanish must be es-MX rather
+    // than a bare `es` — mobile Chrome offers to translate a bare-`es` page
+    // for a Spanish reader, which is a bad first impression.
+    const lang = html.match(/<html[^>]+lang="([^"]+)"/)?.[1];
+    const expected = isEs ? 'es-MX' : 'en';
+    if (lang !== expected) {
+      i18nIssues.push(`${route} — <html lang> is "${lang}", expected "${expected}"`);
+    }
+
+    // Both alternates plus x-default on every public page.
+    for (const hl of ['en', 'es-MX', 'x-default']) {
+      if (!new RegExp(`hreflang="${hl.replace('-', '-')}"`).test(html)) {
+        i18nIssues.push(`${route} — missing hreflang="${hl}"`);
+      }
+    }
+
+    // The switcher must target the SAME route in the other language, never
+    // that language's home page.
+    const switchHref = html.match(/data-lang-switch="[^"]+"[^>]*?/)
+      ? html.match(/href="([^"]+)"[^>]*data-lang-switch/)?.[1] ??
+        html.match(/data-lang-switch="[^"]*"[\s\S]{0,200}?href="([^"]+)"/)?.[1]
+      : undefined;
+    const anchors = [...html.matchAll(/<a\b[^>]*data-lang-switch[^>]*>/g)].map((m) => m[0]);
+    if (anchors.length === 0) {
+      i18nIssues.push(`${route} — no language switcher`);
+    } else {
+      const bare = route.replace(/^\/es/, '') || '/';
+      const want = isEs ? bare : bare === '/' ? '/es/' : `/es${bare}`;
+      // Several switchers per page (header, mobile nav, footer) — report the
+      // page once rather than once per instance.
+      const wrong = [...new Set(
+        anchors.map((a) => a.match(/href="([^"]+)"/)?.[1]).filter((h) => h !== want)
+      )];
+      for (const href of wrong) {
+        i18nIssues.push(`${route} — switcher points at "${href}", expected "${want}"`);
+      }
+    }
+    void switchHref;
+  }
+}
+
+console.log('\nLOCALISATION\n');
+if (i18nIssues.length === 0) {
+  const pub = htmlFiles.length - htmlFiles.filter((f) => relative(DIST, f).startsWith('lab/')).length;
+  console.log(`  PASS  ${pub} public pages, English and Spanish in parity.`);
+} else {
+  for (const issue of i18nIssues) console.log(`  FAIL  ${issue}`);
+}
+
 console.log('\nEFFECTS IN USE\n');
 if (effectsInUse.size === 0) {
   console.log('  None. No rule is currently suspended.');
@@ -528,10 +678,10 @@ if (markupIssues.length === 0) {
 }
 
 console.log('\n' + '='.repeat(72));
-const total = failed.length + markupIssues.length;
+const total = failed.length + markupIssues.length + i18nIssues.length;
 console.log(
   total === 0
-    ? `All ${results.length} colour checks and ${htmlFiles.length} pages pass.\n`
+    ? `All ${results.length} colour checks and ${htmlFiles.length} pages pass, in both languages.\n`
     : `${total} issue(s) found.\n`
 );
 

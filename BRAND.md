@@ -185,6 +185,64 @@ guards it.
 
 ---
 
+## Rooms are not a fourth line
+
+Stovehaus builds complete sauna rooms — cabins, barrel saunas, indoor fit-outs
+and commercial installs — and `/rooms` says so. Structurally it is deliberately
+**not** a fourth product line, for one reason that is easy to lose:
+
+**The line colours code what a thing heats.** Ember is fire, Spring is water,
+Dusk is gas. A room heats nothing, so a fourth chip colour would not extend the
+system, it would break it — the code would stop meaning "heat source" and start
+meaning "product category", at which point it stops doing any work at all.
+
+So rooms carry **`steel`**, the mill-finish token, no chip, and no model slots.
+Like the fire pits, there is no catalogue: every room is quoted to the drawing.
+On the homepage the rooms band sits *after* the three-line grid rather than
+inside it, for the same reason.
+
+There are also no room specifications, sizes, timbers, lead times or
+photographs. Voice rule 2 therefore binds hard on `/rooms`: the page makes
+exactly one claim — that we build them and will quote one — and states what we
+need in order to quote. No page may show a cedar interior and imply Stovehaus
+built it; see CREDITS.md.
+
+---
+
+## Two languages
+
+English on the bare routes, Spanish under `/es/` with the same slugs. Copy
+lives in `src/i18n/{en,es}.ts`; `src/data/` holds only what does not translate.
+
+Three brand rules govern the translation, and all three are checked:
+
+1. **"Built for the flame." is never translated.** The guidelines say so
+   outright — "Never modify it, never translate it in the lockup." On this site
+   it exists only as outlined artwork inside the reversed footer lockup, so
+   there is no live type to translate. The audit fails the build if it ever
+   appears as page text, because that would mean someone re-typeset it.
+2. **"Stovehaus" is one word, capital S only, in every language.** The wordmark
+   is outlined artwork, so it reads identically either way.
+3. **Model names do not translate.** A dealer quoting across a border needs one
+   name for one stove: Versa 16 LS is Versa 16 LS in both trees.
+
+Numbers do not translate either. es-MX and en-US share the decimal point and
+the thousands comma, so `15.4 kW` and `6–13 m³ (212–459 ft³)` are correct in
+both — only the labels move. Metric-first with imperial in parentheses is the
+brand convention regardless of who is reading.
+
+`<html lang>` is **es-MX**, not a bare `es`. A bare `es` reads as Peninsular
+Spanish and prompts mobile Chrome to offer a translation of a Spanish page to a
+Spanish reader.
+
+The Spanish is written to the same voice rules rather than translated word for
+word: the foreman does not get chatty in Spanish. The audit carries a separate
+avoided-word list per language, deliberately short on the Spanish side — "a
+medida" is not on it, because "hecho a la medida" is the approved phrase for
+the made-to-order fire pit line.
+
+---
+
 ## Button effects, and the rules they suspend
 
 `src/styles/effects.css` carries four modern treatments, each in two forms:
@@ -267,7 +325,8 @@ blocking, all need an answer before launch.
 
 | Item | Current state |
 |---|---|
-| **Phone number** | The 0001 flyer prints `625-111-3000`, the 0002 event stand prints `625-111-0000`. Using the flyer's. Needs confirming. |
+| **Collateral disagrees with the site** | The live number is `625-111-6622`. The 0001 flyer prints `625-111-3000` and the 0002 event stand prints `625-111-0000` — both are superseded and should be reprinted. The audit fails the build if either reappears. |
+| **Email unconfirmed** | `sales@stovehaus.com` follows the domain but has not been verified to exist. If it does not, remove it — a dead mailto is worse than no mailto, and WhatsApp and the phone both reach someone. |
 | **Tested figures** | Every Versa figure is a design target. Fire each stove, measure it, and flip `basis` to `'tested'` per model. |
 | **Clearances** | Not published, by choice — see above. The single most important thing to test and publish, because an installer cannot quote without them. |
 | **Model codes** | The guidelines propose `SH-[line]-[output]-[finish]` and warn that mixed naming makes a small line look improvised. The Versa names are a third convention, and "13" reads as room volume rather than output. No codes assigned; every slot shows `Pending`. |

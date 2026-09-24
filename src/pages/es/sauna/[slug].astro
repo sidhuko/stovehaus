@@ -1,6 +1,6 @@
 ---
-import ProductPage from '../../components/pages/ProductPage.astro';
-import { productsInLine, type Product } from '../../data/products';
+import ProductPage from '../../../components/pages/ProductPage.astro';
+import { productsInLine, type Product } from '../../../data/products';
 
 export function getStaticPaths() {
   return productsInLine('sauna')
@@ -11,4 +11,4 @@ export function getStaticPaths() {
 interface Props { product: Product }
 const { product } = Astro.props;
 ---
-<ProductPage product={product} locale="en" />
+<ProductPage product={product} locale="es" />

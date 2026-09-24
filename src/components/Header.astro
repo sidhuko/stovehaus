@@ -1,12 +1,19 @@
 ---
+import LanguageSelector from './LanguageSelector.astro';
 import { NAV, SITE } from '../data/site';
+import { t, localePath, type Locale } from '../i18n';
 
 interface Props {
-  path: string;
+  locale: Locale;
+  /** This page's own route — what the language switcher must target. */
+  route: string;
+  /** Which nav item to mark active. A product page highlights its line. */
+  navRoute: string;
 }
-const { path } = Astro.props;
+const { locale, route, navRoute } = Astro.props;
+const d = t(locale);
 
-const isActive = (href: string) => path === href || path.startsWith(href + '/');
+const isActive = (href: string) => navRoute === href || navRoute.startsWith(href + '/');
 ---
 
 {/*
@@ -15,12 +22,18 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
   underline. One gold button, ink label."
 
   Both marks are the supplied artwork, scaled proportionally. The lockup is
-  never rebuilt from live type — README rule 5.
+  never rebuilt from live type — README rule 5. It is also never translated:
+  the wordmark is outlined artwork, so "Stovehaus" reads identically in both
+  languages, which is exactly what the guidelines want.
 */}
 <header class="bg-surface-200 border-b border-hairline">
   <div class="mx-auto max-w-7xl px-6 lg:px-10">
     <div class="flex items-center justify-between gap-8 h-[88px]">
-      <a href="/" class="flex items-center gap-3 shrink-0" aria-label={`${SITE.name} — home`}>
+      <a
+        href={localePath(locale, '/')}
+        class="flex items-center gap-3 shrink-0"
+        aria-label={`${SITE.name} — ${d.common.breadcrumbHome}`}
+      >
         <img
           src="/brand/stovehaus-mark-gold.svg"
           alt=""
@@ -43,7 +56,7 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
             NAV.map((item) => (
               <li>
                 <a
-                  href={item.href}
+                  href={localePath(locale, item.href)}
                   aria-current={isActive(item.href) ? 'page' : undefined}
                   class:list={[
                     'label inline-block pb-1 border-b-2 transition-colors',
@@ -52,7 +65,7 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
                       : 'border-transparent text-ink-muted hover:text-ink',
                   ]}
                 >
-                  {item.label}
+                  {d.nav[item.key]}
                 </a>
               </li>
             ))
@@ -60,7 +73,12 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
         </ul>
       </nav>
 
-      <a href="/quote" class="btn-gold bx-press bx-liquid hidden sm:inline-block shrink-0">Request a quote</a>
+      <div class="hidden sm:flex items-center gap-3 shrink-0">
+        <LanguageSelector locale={locale} route={route} />
+        <a href={localePath(locale, '/quote')} class="btn-gold bx-press bx-liquid"
+          >{d.common.requestQuote}</a
+        >
+      </div>
     </div>
 
     {/* Mobile nav — same items, no second gold element. */}
@@ -70,7 +88,7 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
           NAV.map((item) => (
             <li>
               <a
-                href={item.href}
+                href={localePath(locale, item.href)}
                 aria-current={isActive(item.href) ? 'page' : undefined}
                 class:list={[
                   'label inline-block pb-1 border-b-2',
@@ -79,15 +97,20 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
                     : 'border-transparent text-ink-muted',
                 ]}
               >
-                {item.label}
+                {d.nav[item.key]}
               </a>
             </li>
           ))
         }
         <li class="sm:hidden">
-          <a href="/quote" class="label inline-block pb-1 border-b-2 border-transparent text-ink"
-            >Request a quote</a
+          <a
+            href={localePath(locale, '/quote')}
+            class="label inline-block pb-1 border-b-2 border-transparent text-ink"
+            >{d.common.requestQuote}</a
           >
+        </li>
+        <li class="ml-auto">
+          <LanguageSelector locale={locale} route={route} />
         </li>
       </ul>
     </nav>

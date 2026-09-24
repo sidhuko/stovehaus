@@ -1,0 +1,135 @@
+---
+import Base from '../../layouts/Base.astro';
+import Hero from '../Hero.astro';
+import AudienceFork from '../AudienceFork.astro';
+import MessageBlock from '../MessageBlock.astro';
+import LineChip from '../LineChip.astro';
+import { SITE } from '../../data/site';
+import { LINES, productsInLine } from '../../data/products';
+import { t, localePath, type Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const d = t(locale);
+
+/* Each line says where it actually stands, rather than a count that would read
+   as "0 of 3" on lines that were never going to have a model list. */
+const standingFor = (status: (typeof LINES)[number]['status'], n: number) =>
+  status === 'available'
+    ? d.home.standing.available(n)
+    : status === 'coming-soon'
+      ? d.home.standing.comingSoon
+      : d.home.standing.madeToOrder;
+
+const lineSummary = LINES.map((line) => ({
+  line,
+  standing: standingFor(
+    line.status,
+    productsInLine(line.id).filter((p) => p.status === 'published').length
+  ),
+}));
+---
+
+<Base title={SITE.name} route="/" locale={locale}>
+  <Hero
+    eyebrow={d.home.heroEyebrow}
+    headline={d.home.heroHeadline}
+    lede={d.home.heroLede}
+    image="jacuzzi-wood-fired.jpg"
+    imageAlt={d.lines.jacuzzi.imageAlt}
+    ctaHref={localePath(locale, '/sauna')}
+    ctaLabel={d.common.seeHeaters}
+    secondaryHref={localePath(locale, '/dealers')}
+    secondaryLabel={d.common.dealerInformation}
+  />
+
+  {/* Three lines, three codes. */}
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 py-20">
+    <div class="max-w-2xl">
+      <h2 class="display-2 text-ink">{d.home.threeLinesTitle}</h2>
+      <p class="body-copy mt-4 text-ink-muted">{d.home.threeLinesBody}</p>
+    </div>
+
+    <div class="mt-14 grid gap-px bg-hairline md:grid-cols-3 border border-hairline">
+      {
+        lineSummary.map(({ line, standing }) => (
+          <a
+            href={localePath(locale, `/${line.id}`)}
+            class="group bg-surface-100 p-8 flex flex-col hover:bg-surface-200 transition-colors"
+          >
+            <LineChip line={line} locale={locale} class="self-start" />
+            <h3 class="display-3 mt-5 text-ink">{d.lines[line.id].name}</h3>
+            <p class="body-copy mt-3 text-ink-muted">{d.lines[line.id].lede}</p>
+            <div class="mt-auto pt-8 flex items-baseline justify-between gap-4 border-t border-hairline">
+              <span class="label text-ink-muted">
+                {d.common.boughtOn} {d.lines[line.id].boughtOn.toLowerCase()}
+              </span>
+              <span class="spec text-steel">{standing}</span>
+            </div>
+          </a>
+        ))
+      }
+    </div>
+
+    <p class="body-copy mt-6 text-ink-faint">{d.home.catalogueNote}</p>
+  </section>
+
+  {/*
+    Rooms.
+
+    Deliberately OUTSIDE the three-line grid above. That grid is colour-coded
+    by what each line heats, and a room heats nothing — dropping it in would
+    need a fourth chip colour and would break the code. So it sits after,
+    in steel, as the thing that goes around the heaters rather than beside
+    them.
+  */}
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 pb-20">
+    <div class="border border-hairline bg-surface-200 p-8 lg:p-12 grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_auto] lg:items-end">
+      <div>
+        <p class="eyebrow text-steel">{d.nav.rooms}</p>
+        <h2 class="display-2 mt-4 text-ink max-w-2xl">{d.rooms.homeTitle}</h2>
+        <p class="body-copy mt-4 text-ink-muted max-w-2xl">{d.rooms.homeBody}</p>
+      </div>
+      <a href={localePath(locale, '/rooms')} class="btn-outline bx-press shrink-0"
+        >{d.rooms.typesTitle}</a
+      >
+    </div>
+  </section>
+
+  {/* The fork — dealers and end buyers, equally weighted. */}
+  <AudienceFork locale={locale} />
+
+  {/* Messages 01 and 02. Messages 03 and 04 carry the dealers page. */}
+  <MessageBlock heading={d.home.whyTitle} messages={[d.messages[0], d.messages[1]]} />
+
+  {/* Origin — a fact in a sentence, not a flag on a banner (guidelines p.8). */}
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 py-20">
+    <div class="grid gap-12 lg:grid-cols-2 lg:gap-20 items-start">
+      <div>
+        <p class="eyebrow text-steel">{d.home.originEyebrow}</p>
+        <h2 class="display-2 mt-4 text-ink">{d.home.originTitle}</h2>
+        <p class="body-copy mt-5 text-ink-muted">{d.home.originBody1}</p>
+        <p class="body-copy mt-4 text-ink-muted">{d.home.originBody2}</p>
+        <a href={localePath(locale, '/shop')} class="btn-outline bx-press mt-8"
+          >{d.common.insideTheShop}</a
+        >
+      </div>
+
+      <div class="border border-hairline bg-surface-200 p-8 lg:p-10">
+        <p class="eyebrow text-steel">{d.home.dealerAsksTitle}</p>
+        <dl class="mt-6 border-t border-hairline">
+          {
+            d.home.dealerAsks.map(([label, value]) => (
+              <div class="grid grid-cols-[1fr_auto] gap-6 py-3.5 border-b border-hairline">
+                <dt class="label font-normal text-ink-muted">{label}</dt>
+                <dd class="spec text-ink text-right">{value}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+    </div>
+  </section>
+</Base>

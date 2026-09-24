@@ -1,0 +1,258 @@
+---
+import Base from '../../layouts/Base.astro';
+import { SITE, whatsappUrl } from '../../data/site';
+import { LINES } from '../../data/products';
+import { t, type Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const d = t(locale);
+
+/** Text inputs, typed so `type` narrows to a real HTML input type. */
+const FIELDS: { id: string; label: string; type: 'text' | 'email'; autocomplete: string }[] = [
+  { id: 'name', label: d.quote.name, type: 'text', autocomplete: 'name' },
+  { id: 'company', label: d.quote.company, type: 'text', autocomplete: 'organization' },
+  { id: 'email', label: d.quote.email, type: 'email', autocomplete: 'email' },
+  { id: 'location', label: d.quote.location, type: 'text', autocomplete: 'off' },
+];
+
+/*
+  The form sends over WhatsApp.
+
+  There is no backend — the site is static — so a form that POSTs would either
+  need a third-party endpoint or would drop the enquiry on the floor. WhatsApp
+  is the one route that reliably delivers a structured message to a person, and
+  for a Mexican shop selling into North America it is the channel dealers and
+  installers actually answer on.
+
+  On submit, the fields are composed into a plain-text message and opened in
+  WhatsApp. Nothing is stored here and nothing is sent until the sender presses
+  send inside WhatsApp — they see the message first. The page says so above the
+  button, because a button that silently launches another app is a surprise,
+  and the label says "Send on WhatsApp" for the same reason.
+
+  Without JavaScript the button is a plain link to the same chat, unfilled. The
+  form still reads as a checklist of what to tell us, which is most of its
+  value anyway.
+
+  The audience selector is first because the two readers need different things
+  from us, and asking once saves a round trip. The `lang` field is how whoever
+  picks it up knows which language to answer in — a Spanish enquiry answered in
+  English is the fastest way to lose it.
+*/
+---
+
+<Base title={d.quote.headline.replace(/\.$/, '')} route="/quote" locale={locale} description={d.quote.lede}>
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 pt-16">
+    <p class="eyebrow text-steel">{d.quote.eyebrow}</p>
+    <h1 class="display-1 mt-5 text-ink max-w-3xl">{d.quote.headline}</h1>
+    <p class="lede mt-6 text-ink-muted max-w-2xl">{d.quote.lede}</p>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 py-16">
+    <div class="grid gap-12 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:gap-16 items-start">
+      <form class="border border-hairline bg-surface-100 p-8 lg:p-10" novalidate>
+        {/* So the reply comes back in the language the enquiry was written in. */}
+        <input type="hidden" name="lang" value={locale} />
+
+        <fieldset class="border-0 p-0 m-0">
+          <legend class="eyebrow text-steel">{d.quote.whoYouAre}</legend>
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
+            {
+              [
+                ['dealer', d.quote.dealerOption],
+                ['buyer', d.quote.buyerOption],
+              ].map(([value, label], i) => (
+                <label class="flex items-center gap-3 border border-hairline bg-surface-200 px-4 py-3 cursor-pointer has-checked:border-edge">
+                  <input
+                    type="radio"
+                    name="audience"
+                    value={value}
+                    checked={i === 0}
+                    class="accent-gold-deep"
+                  />
+                  <span class="label font-normal text-ink">{label}</span>
+                </label>
+              ))
+            }
+          </div>
+        </fieldset>
+
+        <fieldset class="border-0 p-0 m-0 mt-8">
+          <legend class="eyebrow text-steel">{d.quote.askingAbout}</legend>
+          <div class="mt-4 grid gap-3 sm:grid-cols-3">
+            {
+              LINES.map((line) => (
+                <label class="flex items-center gap-3 border border-hairline bg-surface-200 px-4 py-3 cursor-pointer has-checked:border-edge">
+                  <input type="checkbox" name="line" value={line.id} class="accent-gold-deep" />
+                  <span class="label font-normal text-ink">{d.lines[line.id].name}</span>
+                </label>
+              ))
+            }
+          </div>
+        </fieldset>
+
+        <div class="mt-8 grid gap-5 sm:grid-cols-2">
+          {
+            FIELDS.map((field) => (
+              <div>
+                <label for={field.id} class="eyebrow text-steel">
+                  {field.label}
+                </label>
+                <input
+                  id={field.id}
+                  name={field.id}
+                  type={field.type}
+                  autocomplete={field.autocomplete}
+                  class="mt-2.5 w-full border border-hairline bg-surface-300 px-4 py-3 body-copy text-ink focus:border-edge"
+                />
+              </div>
+            ))
+          }
+        </div>
+
+        <div class="mt-5">
+          <label for="message" class="eyebrow text-steel">{d.quote.message}</label>
+          <textarea
+            id="message"
+            name="message"
+            rows="5"
+            class="mt-2.5 w-full border border-hairline bg-surface-300 px-4 py-3 body-copy text-ink focus:border-edge"
+          ></textarea>
+        </div>
+
+        <p class="body-copy mt-8 text-ink-muted">{d.quote.howItSends}</p>
+
+        {/*
+          An <a> rather than a <button>, so it works with JavaScript off: the
+          href is the unfilled chat, and the script below swaps in the composed
+          message. type="submit" would post nowhere.
+        */}
+        <a
+          href={whatsappUrl()}
+          data-whatsapp-submit
+          target="_blank"
+          rel="noopener"
+          class="btn-gold bx-press bx-liquid mt-5 inline-flex items-center gap-2.5"
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path
+              d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.25-8.23a8.2 8.2 0 0 1 8.24 8.24c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.78.97-.15.16-.29.18-.53.06-.25-.13-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.5.11-.11.25-.29.37-.44.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.47c-.16 0-.43.06-.65.31-.23.25-.86.84-.86 2.05s.88 2.38 1 2.54c.12.17 1.73 2.64 4.19 3.7.59.26 1.04.41 1.4.52.59.19 1.12.16 1.55.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.11-.22-.17-.47-.29Z"
+            />
+          </svg>
+          <span>{d.quote.submit}</span>
+        </a>
+
+        <p class="body-copy mt-5 text-ink-faint">{d.quote.noWhatsapp}</p>
+      </form>
+
+      <aside>
+        <div class="border border-hairline bg-surface-200 p-8">
+          <p class="eyebrow text-steel">{d.quote.direct}</p>
+          <ul class="mt-6 border-t border-hairline">
+            <li class="py-3.5 border-b border-hairline">
+              <a href={`tel:${SITE.phoneHref}`} class="spec link">{SITE.phone}</a>
+            </li>
+            <li class="py-3.5 border-b border-hairline">
+              <a href={whatsappUrl()} target="_blank" rel="noopener" class="body-copy link"
+                >{d.whatsapp.label}</a
+              >
+            </li>
+            <li class="py-3.5 border-b border-hairline">
+              <a href={`mailto:${SITE.email}`} class="body-copy link">{SITE.email}</a>
+            </li>
+            <li class="py-3.5 border-b border-hairline">
+              <span class="body-copy text-ink-muted">{SITE.domain}</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="mt-8 border border-hairline bg-gold-wash p-8">
+          <p class="eyebrow text-gold-deep">{d.quote.beforeYouAsk}</p>
+          <p class="body-copy mt-3 text-ink">{d.certification}</p>
+        </div>
+
+        <div class="mt-8 border border-hairline p-8">
+          <p class="eyebrow text-steel">{d.quote.whatComesBack}</p>
+          <ul class="mt-6 border-t border-hairline">
+            {
+              d.quote.comesBackItems.map((item) => (
+                <li class="label font-normal text-ink-muted py-3 border-b border-hairline">
+                  {item}
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  {/*
+    Composes the form into a WhatsApp message and points the link at it.
+
+    Runs on input rather than on click so the href is always current — a click
+    handler that builds the URL can be beaten by a middle-click or a
+    copy-link, which would send an empty chat.
+
+    Labels come from the dictionary and are looked up by the input's VALUE, not
+    scraped from the rendered label. `innerText` respects CSS text-transform,
+    and `.label` is uppercase, so scraping produced "DEALER OR INSTALLER" —
+    a message that arrives shouting is a poor first thing to say to a dealer.
+
+    Blank fields are omitted rather than filled with "not given". A wall of
+    placeholders buries the two lines the reader actually needs.
+  */}
+  <script
+    is:inline
+    define:vars={{
+      waBase: `https://wa.me/${SITE.whatsapp}`,
+      L: d.whatsapp,
+      audienceLabels: { dealer: d.quote.dealerOption, buyer: d.quote.buyerOption },
+      lineLabels: Object.fromEntries(LINES.map((l) => [l.id, d.lines[l.id].name])),
+    }}
+  >
+    (() => {
+      const link = document.querySelector('[data-whatsapp-submit]');
+      const form = link && link.closest('form');
+      if (!link || !form) return;
+
+      const val = (name) => {
+        const el = form.elements.namedItem(name);
+        return el && 'value' in el ? String(el.value).trim() : '';
+      };
+
+      const compose = () => {
+        const audience = form.querySelector('input[name="audience"]:checked')?.value;
+        const lines = [...form.querySelectorAll('input[name="line"]:checked')]
+          .map((i) => lineLabels[i.value])
+          .filter(Boolean)
+          .join(', ');
+
+        const rows = [
+          [L.fields.who, audienceLabels[audience]],
+          [L.fields.lines, lines],
+          [L.fields.name, val('name')],
+          [L.fields.company, val('company')],
+          [L.fields.email, val('email')],
+          [L.fields.shipTo, val('location')],
+        ]
+          .filter(([, v]) => v)
+          .map(([k, v]) => `${k}: ${v}`);
+
+        const needs = val('message');
+        const body = [L.messageTitle, '', ...rows]
+          .concat(needs ? ['', `${L.fields.needs}:`, needs] : [])
+          .join('\n');
+
+        link.setAttribute('href', `${waBase}?text=${encodeURIComponent(body)}`);
+      };
+
+      form.addEventListener('input', compose);
+      form.addEventListener('change', compose);
+      compose();
+    })();
+  </script>
+</Base>

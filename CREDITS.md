@@ -43,5 +43,9 @@ number or a name, or it gets cut.
 - The actual shop, crew and fire test. Message 02 is "made by hand, by people we
   can name" and we cannot yet name them.
 - A finished Stovehaus fire pit install.
+- **Room photography.** `/rooms` runs a flat firebox hero on purpose: the only
+  interior plate in the library is a cedar sauna with a competitor's heater in
+  it, and on a page about rooms we build that would read as our work. Nothing
+  goes on that page until there is a real one.
 - The 0001 flyer's fire pit table shot has no locatable source file. If the
   original turns up it is a better plate than the stock burner currently used.

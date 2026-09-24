@@ -1,0 +1,109 @@
+---
+import Base from '../../layouts/Base.astro';
+import MessageBlock from '../MessageBlock.astro';
+import { SITE } from '../../data/site';
+import { t, localePath, type Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const d = t(locale);
+
+/*
+  Messages 03 and 04 carry this page. The guidelines single out 04:
+  "Message 04 is the one most often skipped and the one dealers actually need."
+
+  Dealers decide on margin, lead time, freight, listings, and whether you will
+  still be here in three years. None of those are numbers we hold yet, so this
+  page names each one and says plainly that we will give the figure on request,
+  rather than filling the gap with an adjective — in either language.
+*/
+---
+
+<Base title={d.nav.dealers} route="/dealers" locale={locale} description={d.dealers.lede}>
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 pt-16">
+    <p class="eyebrow text-steel">{d.dealers.eyebrow}</p>
+    <h1 class="display-1 mt-5 text-ink max-w-3xl">{d.dealers.headline}</h1>
+    <p class="lede mt-6 text-ink-muted max-w-2xl">{d.dealers.lede}</p>
+  </section>
+
+  {/*
+    Complete rooms, on the page a dealer reads.
+
+    The pitch here is that a dealer can take the whole job — stove and room —
+    rather than selling the stove and handing the room to someone else. That is
+    a margin argument, which is why it sits on this page and not on a line page.
+
+    Two things to hold on to if anyone extends this block:
+
+      · Rooms are NOT a catalogue line and have no chip colour. The line
+        colours code what a thing heats, and a room heats nothing.
+      · We hold no room specifications, sizes, timbers or prices. This block
+        makes exactly one claim — that we build them and will quote one — and
+        every sentence has to survive "what number or name backs that".
+  */}
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 pt-14">
+    <div class="border border-hairline bg-surface-200 p-8 lg:p-10">
+      <p class="eyebrow text-steel">{d.dealers.rooms.eyebrow}</p>
+      <h2 class="display-2 mt-4 text-ink max-w-3xl">{d.dealers.rooms.title}</h2>
+      <p class="body-copy mt-5 text-ink-muted max-w-3xl">{d.dealers.rooms.body}</p>
+      <a href={localePath(locale, '/quote')} class="btn-outline bx-press mt-8"
+        >{d.dealers.rooms.cta}</a
+      >
+    </div>
+  </section>
+
+  {/* Certification next — the thing most often skipped, per guidelines p.9. */}
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 pt-14">
+    <div class="border border-hairline bg-gold-wash p-8 lg:p-10">
+      <p class="eyebrow text-gold-deep">{d.dealers.certStatusTitle}</p>
+      <p class="lede mt-4 text-ink max-w-3xl">{d.certification}</p>
+      <p class="body-copy mt-4 text-ink-muted max-w-3xl">{d.dealers.certStatusBody}</p>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 py-16">
+    <h2 class="display-2 text-ink">{d.dealers.whatWeSend}</h2>
+    <div class="mt-10 grid gap-px bg-hairline sm:grid-cols-2 lg:grid-cols-3 border border-hairline">
+      {
+        d.dealers.asks.map((item) => (
+          <div class="bg-surface-100 p-7">
+            <h3 class="label text-ink">{item.label}</h3>
+            <p class="body-copy mt-2.5 text-ink-muted">{item.body}</p>
+          </div>
+        ))
+      }
+    </div>
+    <p class="body-copy mt-6 text-ink-faint">{d.dealers.figuresNote}</p>
+  </section>
+
+  {/* Messages 03 and 04. */}
+  <MessageBlock heading={d.dealers.caseTitle} messages={[d.messages[2], d.messages[3]]} />
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 py-20">
+    <div class="grid gap-12 lg:grid-cols-2 lg:gap-20 items-start">
+      <div>
+        <h2 class="display-2 text-ink">{d.dealers.quoteTitle}</h2>
+        <p class="body-copy mt-5 text-ink-muted">{d.dealers.quoteBody}</p>
+        <a href={localePath(locale, '/quote')} class="btn-gold bx-press bx-liquid mt-8"
+          >{d.common.requestQuote}</a
+        >
+      </div>
+
+      <div class="border border-hairline bg-surface-200 p-8">
+        <p class="eyebrow text-steel">{d.dealers.everyQuoteCarries}</p>
+        <ul class="mt-6 border-t border-hairline">
+          {
+            d.dealers.quoteItems.map((item) => (
+              <li class="label font-normal text-ink-muted py-3 border-b border-hairline">
+                {item}
+              </li>
+            ))
+          }
+        </ul>
+        <a href={`mailto:${SITE.email}`} class="body-copy link mt-6 inline-block">{SITE.email}</a>
+      </div>
+    </div>
+  </section>
+</Base>

@@ -1,4 +1,12 @@
 ---
+import { t, localePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const d = t(locale);
+
 /*
   Two paths, deliberately equal.
 
@@ -9,26 +17,8 @@
   in reading order by design.
 */
 const PATHS = [
-  {
-    eyebrow: 'For dealers and installers',
-    title: 'Stocking or specifying the line',
-    body: 'Margin, lead times, freight from Saltillo, clearances and flue spec, and exactly where each line stands on certification.',
-    items: ['Dealer margin and terms', 'Lead time and freight', 'Clearances and flue spec'],
-    href: '/dealers',
-    cta: 'Dealer information',
-  },
-  {
-    eyebrow: 'For cabins, lodges and properties',
-    title: 'Putting one on your property',
-    body: 'What we build, how it is built, and who builds it. Start with the Versa ladder, then talk to a dealer near you.',
-    items: [
-      'Versa sauna heaters · six models',
-      'Jacuzzi heaters · coming soon',
-      'Gas fire pits · built to order',
-    ],
-    href: '/sauna',
-    cta: 'See the heaters',
-  },
+  { ...d.fork.dealer, href: '/dealers' },
+  { ...d.fork.buyer, href: '/sauna' },
 ];
 ---
 
@@ -50,7 +40,7 @@ const PATHS = [
           </ul>
 
           <div class="mt-auto pt-8">
-            <a href={path.href} class="btn-outline">
+            <a href={localePath(locale, path.href)} class="btn-outline bx-press">
               {path.cta}
             </a>
           </div>

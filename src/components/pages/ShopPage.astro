@@ -1,0 +1,93 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Hero from '../Hero.astro';
+import MessageBlock from '../MessageBlock.astro';
+import { getImage } from '../../data/images';
+import { t, localePath, type Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const d = t(locale);
+
+/*
+  Message 02 carries this page: "One shop, one crew, every stove fired before
+  it's crated."
+
+  Voice rule from p.8: proud of where it's made, without ceremony — a fact in a
+  sentence, not a flag on a banner. And Mexican fabrication is a craft story,
+  not a cost story. The cost argument lives on the dealers page, where it is a
+  margin argument and belongs. That holds in Spanish too: the Spanish copy
+  does not get warmer about the origin just because the reader may be Mexican.
+
+  The photography is Unsplash stock of metalwork, not of our floor. It shows
+  the process honestly and never stands in for a Stovehaus stove — see
+  CREDITS.md and the rules at the top of src/data/images.ts.
+*/
+const PROCESS_IMAGES = ['shop-press-brake.jpg', 'shop-grinding-sparks.jpg', null, null];
+---
+
+<Base title={d.nav.shop} route="/shop" locale={locale} description={d.shop.heroLede}>
+  <Hero
+    eyebrow={d.shop.heroEyebrow}
+    headline={d.shop.heroHeadline}
+    lede={d.shop.heroLede}
+    image="shop-plate.jpg"
+    imageAlt={d.shop.process[0].alt}
+    imagePosition="center 55%"
+    ctaHref={localePath(locale, '/sauna')}
+    ctaLabel={d.common.seeHeaters}
+  />
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 py-20">
+    <div class="max-w-2xl">
+      <h2 class="display-2 text-ink">{d.shop.howTitle}</h2>
+      <p class="body-copy mt-4 text-ink-muted">{d.shop.howBody}</p>
+    </div>
+
+    <div class="mt-14 grid gap-px bg-hairline md:grid-cols-2 border border-hairline">
+      {
+        d.shop.process.map((step, i) => {
+          const photo = getImage(PROCESS_IMAGES[i] ?? undefined);
+          return (
+            <div class="bg-surface-100 flex flex-col">
+              {photo && (
+                <Image
+                  src={photo}
+                  alt={step.alt ?? ''}
+                  width={720}
+                  height={420}
+                  widths={[720, 1200]}
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  class="w-full aspect-7/4 object-cover border-b border-hairline"
+                />
+              )}
+              <div class="p-8 lg:p-10">
+                <p class="spec text-steel">{step.n}</p>
+                <h3 class="display-3 mt-3 text-ink">{step.title}</h3>
+                <p class="body-copy mt-3 text-ink-muted">{step.body}</p>
+              </div>
+            </div>
+          );
+        })
+      }
+    </div>
+
+    {/* Said plainly, because a dealer will ask and a buyer deserves to know. */}
+    <p class="body-copy mt-6 text-ink-faint">{d.shop.stockNote}</p>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-6 lg:px-10 pb-16">
+    <div class="border border-hairline bg-surface-200 p-8 lg:p-12 max-w-3xl">
+      <h2 class="display-3 text-ink">{d.shop.whyMexicoTitle}</h2>
+      <p class="body-copy mt-4 text-ink-muted">{d.shop.whyMexicoBody}</p>
+      <a href={localePath(locale, '/dealers')} class="btn-outline bx-press mt-8"
+        >{d.common.dealerInformation}</a
+      >
+    </div>
+  </section>
+
+  <MessageBlock messages={[d.messages[1], d.messages[0]]} />
+</Base>
